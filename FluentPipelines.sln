@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34018.315
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentPipelines", "FluentPipelines\FluentPipelines.csproj", "{0BB3D5EB-7191-4DD5-8278-D9E89ACDDC0E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentPipelinesTests", "FluentPipelinesTests\FluentPipelinesTests.csproj", "{0C14E620-B85C-4AF6-A8FD-51D63C4B621F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0BB3D5EB-7191-4DD5-8278-D9E89ACDDC0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BB3D5EB-7191-4DD5-8278-D9E89ACDDC0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BB3D5EB-7191-4DD5-8278-D9E89ACDDC0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BB3D5EB-7191-4DD5-8278-D9E89ACDDC0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C14E620-B85C-4AF6-A8FD-51D63C4B621F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C14E620-B85C-4AF6-A8FD-51D63C4B621F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C14E620-B85C-4AF6-A8FD-51D63C4B621F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C14E620-B85C-4AF6-A8FD-51D63C4B621F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {796F9BA4-FE8E-4CC4-90A3-1516FC5C86A9}
+	EndGlobalSection
+EndGlobal
