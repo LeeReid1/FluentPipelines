@@ -1,115 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Runtime;
-using System.Runtime.CompilerServices;
-using static System.Net.Mime.MediaTypeNames;
-
-namespace FluentPipelines;
-
-
-public interface INoInputStartPipe
-{
-   Task Run(SharedExecutionSettings? executionSettings = null);
-}
-
-/// <summary>
-/// A pipeline that does not offer a way to connect the left to another pipeline's end
-/// </summary>
-/// <typeparam name="TPipelineInput"></typeparam>
-public interface IPipeline_LeftSealed
-{
-   INoInputStartPipe PipelineStart { get; }
-
-}
-
-/// <summary>
-/// A pipeline that can be connected to the end of another
-/// </summary>
-/// <typeparam name="TPipelineInput"></typeparam>
-/// <typeparam name="TOut"></typeparam>
-public interface IPipeline_LeftOpen<TPipelineInput>
-{
-   IPipe<TPipelineInput> PipelineStart { get; }
-}
-
-/// <summary>
-/// A pipeline that does not provide an output
-/// </summary>
-/// <typeparam name="TPipelineInput"></typeparam>
-/// <typeparam name="T1"></typeparam>
-public interface IPipeline_RightSealed<T1>
-{
-   IPipe<T1> Last { get; }
-}
-
-/// <summary>
-/// A pipeline that does provide an output
-/// </summary>
-/// <typeparam name="TPipelineInput"></typeparam>
-/// <typeparam name="T1"></typeparam>
-public interface IPipeline_RightOpen<TOut>
-{
-   IPipeOut<TOut> Last { get; }
-
-}
-
-
-
-
-public interface IPipeline_FullySealed<T1> : IPipeline_LeftSealed, IPipeline_RightSealed<T1>
-{
-
-}
-public interface IPipeline_FullyOpen<TPipelineInput, T1> : IPipeline_LeftOpen<TPipelineInput>, IPipeline_RightOpen<T1>
-{
-
-}
-
-/// <summary>
-/// A pipeline that does not provide an output
-/// </summary>
-/// <typeparam name="TPipelineInput"></typeparam>
-/// <typeparam name="T1"></typeparam>
-public interface ILeftExtendableSealedPipeline<TPipelineInput, T1> : IPipeline_LeftOpen<TPipelineInput>
-{
-   IPipe<T1> Last { get; }
-}
-
-/// <summary>
-/// A pipeline that provides an output
-/// </summary>
-/// <typeparam name="TPipelineInput"></typeparam>
-/// <typeparam name="T1"></typeparam>
-/// <typeparam name="T2"></typeparam>
-public interface IExtendablePipeline<TPipelineInput, TOut> : IPipeline_LeftSealed
-{
-   IPipeOut<TOut> Last { get; }
-}
-
-
-/// <summary>
-/// A pipeline that provides an output
-/// </summary>
-/// <typeparam name="TPipelineInput"></typeparam>
-/// <typeparam name="T1"></typeparam>
-/// <typeparam name="T2"></typeparam>
-public interface IExtendablePipelineWith2ndToLast<TPipelineInput, T1, T2> : IPipeline_LeftSealed
-{
-   IPipe<T1, T2> Last { get; }
-}
-
-
-
-/// <summary>
-/// 
-/// </summary>
-/// <typeparam name="TThenSource">The pipe that was fed into Then</typeparam>
-/// <typeparam name="TFullPipeline">The result of Then which can be chained with another Then or similar operation</typeparam>
-/// <param name="ThenSource">The pipe that was fed into Then</param>
-/// <param name="Pipeline">The result of Then which can be chained with another Then or similar operation</param>
-public readonly record struct ThenResult<TThenSource, TFullPipeline>(IPipeOut<TThenSource> ThenSource, TFullPipeline Pipeline);
-
-
+﻿namespace FluentPipelines;
 
 ///// <summary>
 ///// A Pipeline only exposing its first, last, and second to last elements. Indended only for use within <see cref="PipeExtensionMethods"/>
@@ -131,7 +20,7 @@ public readonly record struct ThenResult<TThenSource, TFullPipeline>(IPipeOut<TT
 //}
 
 
-public static class PipeExtensionMethods
+public static class ExtensionMethods
 {
 
    public static Task Run<TSource, TPipeline>(this ThenResult<TSource,TPipeline> thenResult, SharedExecutionSettings? settings = null)
