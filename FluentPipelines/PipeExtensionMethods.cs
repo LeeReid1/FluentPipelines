@@ -133,9 +133,157 @@ public readonly record struct ThenResult<TThenSource, TFullPipeline>(IPipeOut<TT
 
 public static class PipeExtensionMethods
 {
+
+   public static Task Run<TSource, TPipeline>(this ThenResult<TSource,TPipeline> thenResult, SharedExecutionSettings? settings = null)
+      where TPipeline : IPipeline_LeftSealed
+   {
+      return thenResult.Pipeline.PipelineStart.Run(settings);
+   }
+
    #region THEN
 
+
+   #region LEFT-OPEN, CLOSED
+
+
+   /// <summary>
+   /// Connects the result of this Then call to the next node
+   /// </summary>
+   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T1, T2>(this Pipeline_Open<TPipelineInput, T2> source,
+                                                                                                            Func<T2,Task> next,
+                                                                                                            string? name = null)
+   {
+      return Then(source, new AsyncAction<T2>(next, name));
+   }
+
+   /// <summary>
+   /// Connects the result of this Then call to the next node
+   /// </summary>
+   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T1, T2>(this Pipeline_Open<TPipelineInput, T2> source,
+                                                                                                            Action<T2> next,
+                                                                                                            string? name = null)
+   {
+      return Then(source, new AsyncAction<T2>(next, name));
+   }
+
+   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T1, T2>(this ThenResult<T1, Pipeline_Open<TPipelineInput, T2>> source,
+                                                                                                         Action<T2> next)
+   {
+      return Then(source.Pipeline, next);
+   }
+   /// <summary>
+   /// Connects the result of this Then call to the next node
+   /// </summary>
+   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this Pipeline_Open<TPipelineInput, T2> source,
+                                                                                                            AsyncAction<T2> next)
+   {
+
+      return Then(source, next.ToPipe());
+   }
+
+
+   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this Pipeline_Open<TPipelineInput, T2> source,
+                                                                                                         IPipe<T2> next)
+   {
+      return Then(source, new Pipeline_RightSealed<T2>(next));
+   }
+   
+   
+   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T1, T2>(this ThenResult<T1, Pipeline_Open<TPipelineInput, T2>> source,
+                                                                                                         Pipeline_RightSealed<T2> next)
+   {
+      return Then(source.Pipeline, next);
+   }
+
+
+   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this Pipeline_Open<TPipelineInput, T2> source,
+                                                                                                         Pipeline_RightSealed<T2> next)
+   {
+      var start = source.PipelineStart;
+      var joinFrom = source.Last;
+      var joinTo = next.PipelineStart;
+
+
+      joinFrom.AddListener(joinTo);
+      return new(joinFrom, new Pipeline_RightSealed<TPipelineInput>(start));
+   }
+
+   #endregion
+
+   #region LEFT-CLOSED, CLOSED
+
+   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
+                                                                                                      Func<T2,Task> next)
+   {
+      return Then(source.Pipeline, new AsyncAction<T2>(next));
+   }
+   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
+                                                                                                      Action<T2> next)
+   {
+      return Then(source.Pipeline, next);
+   }
+
+   /// <summary>
+   /// Connects the result of this Then call to the next node
+   /// </summary>
+   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this Pipeline_LeftSealed<T2> source,
+                                                                   Action<T2> next,
+                                                                   string? name = null)
+   {
+      return Then(source, new AsyncAction<T2>(next, name));
+   }
+
+   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
+                                                                   AsyncAction<T2> next)
+   {
+      return Then(source.Pipeline, next);
+   }
+   /// <summary>
+   /// Connects the result of this Then call to the next node
+   /// </summary>
+   public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this Pipeline_LeftSealed<T2> source,
+                                                               AsyncAction<T2> next)
+   {
+
+      return Then(source, next.ToPipe());
+   }
+
+   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
+                                                                   IPipe<T2> next)
+   {
+      return Then(source.Pipeline, next);
+   }
+   public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this Pipeline_LeftSealed<T2> source,
+                                                               IPipe<T2> next)
+   {
+      return Then(source, new Pipeline_RightSealed<T2>(next));
+   }
+
+   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
+                                                                   Pipeline_RightSealed<T2> next)
+   {
+      return Then(source.Pipeline, next);
+   }
+   public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this Pipeline_LeftSealed<T2> source,
+                                                               Pipeline_RightSealed<T2> next)
+   {
+      var start = source.PipelineStart;
+      var joinFrom = source.Last;
+      var joinTo = next.PipelineStart;
+
+
+      joinFrom.AddListener(joinTo);
+      return new(joinFrom, new Pipeline_FullySealed(start));
+   }
+
+   #endregion
+
+
+
    #region OPEN, OPEN
+
+
+
    /// <summary>
    /// Connects the result of this Then call to the next node
    /// </summary>
@@ -189,6 +337,17 @@ public static class PipeExtensionMethods
 
    #region LEFT-CLOSED, OPEN
 
+   public static ThenResult<TOut, Pipeline_LeftSealed<TNext>> Then<TOut, TNext>(this Func<TOut> first, Func<TOut, TNext> next, string? name = null) => new StartPipe<TOut>(first).Then(next, name);
+   public static ThenResult<TOut, Pipeline_LeftSealed<TNext>> Then<TOut, TNext>(this Func<TOut> first, AsyncFunc<TOut, TNext> next) => new StartPipe<TOut>(first).Then(next);
+   public static ThenResult<TOut, Pipeline_LeftSealed<TNext>> Then<TOut, TNext>(this Func<TOut> first, Pipeline_Open<TOut, TNext> next) => new StartPipe<TOut>(first).Then(next);
+
+   public static ThenResult<T2, Pipeline_LeftSealed<TOut>> Then<T1, T2, TOut>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
+                                                                               Func<T2, Task<TOut>> next, 
+                                                                               string? name=null)
+   {
+      return Then(source.Pipeline, new AsyncFunc<T2,TOut>(next, name));
+   }
+   
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> Then<T1, T2, TOut>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
                                                                                Func<T2, TOut> next, 
                                                                                string? name=null)
@@ -263,118 +422,6 @@ public static class PipeExtensionMethods
    }
 
    #endregion
-
-   #region LEFT-OPEN, CLOSED
-   /// <summary>
-   /// Connects the result of this Then call to the next node
-   /// </summary>
-   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T1, T2>(this Pipeline_Open<TPipelineInput, T2> source,
-                                                                                                            Action<T2> next,
-                                                                                                            string? name = null)
-   {
-      return Then(source, new AsyncAction<T2>(next, name));
-   }
-
-   /// <summary>
-   /// Connects the result of this Then call to the next node
-   /// </summary>
-   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this Pipeline_Open<TPipelineInput, T2> source,
-                                                                                                            AsyncAction<T2> next)
-   {
-
-      return Then(source, next.ToPipe());
-   }
-
-
-   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this Pipeline_Open<TPipelineInput, T2> source,
-                                                                                                         IPipe<T2> next)
-   {
-      return Then(source, new Pipeline_RightSealed<T2>(next));
-   }
-   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T1, T2>(this ThenResult<T1, Pipeline_Open<TPipelineInput, T2>> source,
-                                                                                                         Pipeline_RightSealed<T2> next)
-   {
-      return Then(source.Pipeline, next);
-   }
-   
-   
-   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this Pipeline_Open<TPipelineInput, T2> source,
-                                                                                                         Pipeline_RightSealed<T2> next)
-   {
-      var start = source.PipelineStart;
-      var joinFrom = source.Last;
-      var joinTo = next.PipelineStart;
-
-
-      joinFrom.AddListener(joinTo);
-      return new(joinFrom, new Pipeline_RightSealed<TPipelineInput>(start));
-   }
-
-   #endregion
-
-   #region LEFT-CLOSED, CLOSED
-
-   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
-                                                                                                      Action<T2> next)
-   {
-      return Then(source.Pipeline, next);
-   }
-
-   /// <summary>
-   /// Connects the result of this Then call to the next node
-   /// </summary>
-   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this Pipeline_LeftSealed<T2> source,
-                                                                   Action<T2> next,
-                                                                   string? name = null)
-   {
-      return Then(source, new AsyncAction<T2>(next, name));
-   }
-
-   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
-                                                                   AsyncAction<T2> next)
-   {
-      return Then(source.Pipeline, next);
-   }
-   /// <summary>
-   /// Connects the result of this Then call to the next node
-   /// </summary>
-   public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this Pipeline_LeftSealed<T2> source,
-                                                               AsyncAction<T2> next)
-   {
-
-      return Then(source, next.ToPipe());
-   }
-
-   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
-                                                                   IPipe<T2> next)
-   {
-      return Then(source.Pipeline, next);
-   }
-   public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this Pipeline_LeftSealed<T2> source,
-                                                               IPipe<T2> next)
-   {
-      return Then(source, new Pipeline_RightSealed<T2>(next));
-   }
-
-   public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
-                                                                   Pipeline_RightSealed<T2> next)
-   {
-      return Then(source.Pipeline, next);
-   }
-   public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this Pipeline_LeftSealed<T2> source,
-                                                               Pipeline_RightSealed<T2> next)
-   {
-      var start = source.PipelineStart;
-      var joinFrom = source.Last;
-      var joinTo = next.PipelineStart;
-
-
-      joinFrom.AddListener(joinTo);
-      return new(joinFrom, new Pipeline_FullySealed(start));
-   }
-
-   #endregion
-
 
    #endregion
 
@@ -518,34 +565,34 @@ public static class PipeExtensionMethods
    /// <summary>
    /// Connects the result of this And call to the next node
    /// </summary>
-   public static ThenResult<T2, Pipeline_FullySealed> And<TPipelineInput, T2, TPipeline>(this ThenResult<T2, TPipeline> source,
+   public static ThenResult<T2, Pipeline_FullySealed> And<T2, TPipeline>(this ThenResult<T2, TPipeline> source,
                                                                                                             Action<T2> next,
                                                                                                             string? name = null)
       where TPipeline : IPipeline_LeftSealed
    {
-      return And<TPipelineInput, T2, TPipeline>(source, new AsyncAction<T2>(next, name));
+      return And(source, new AsyncAction<T2>(next, name));
    }
 
    /// <summary>
    /// Connects the result of this And call to the next node
    /// </summary>
-   public static ThenResult<T2, Pipeline_FullySealed> And<TPipelineInput, T2, TPipeline>(this ThenResult<T2, TPipeline> source,
+   public static ThenResult<T2, Pipeline_FullySealed> And<T2, TPipeline>(this ThenResult<T2, TPipeline> source,
                                                                                                             AsyncAction<T2> next)
       where TPipeline : IPipeline_LeftSealed
    {
 
-      return And<TPipelineInput, T2, TPipeline>(source, next.ToPipe());
+      return And(source, next.ToPipe());
    }
 
 
-   public static ThenResult<T2, Pipeline_FullySealed> And<TPipelineInput, T2, TPipeline>(this ThenResult<T2, TPipeline> source,
+   public static ThenResult<T2, Pipeline_FullySealed> And<T2, TPipeline>(this ThenResult<T2, TPipeline> source,
                                                                                                          IPipe<T2> next)
       where TPipeline : IPipeline_LeftSealed
    {
-      return And<TPipelineInput, T2, TPipeline>(source, new Pipeline_RightSealed<T2>(next));
+      return And(source, new Pipeline_RightSealed<T2>(next));
    }
 
-   public static ThenResult<T2, Pipeline_FullySealed> And<TPipelineInput, T2, TPipeline>(this ThenResult<T2, TPipeline> source,
+   public static ThenResult<T2, Pipeline_FullySealed> And<T2, TPipeline>(this ThenResult<T2, TPipeline> source,
                                                                                               Pipeline_RightSealed<T2> next)
       where TPipeline: IPipeline_LeftSealed
    {

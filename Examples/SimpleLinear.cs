@@ -13,7 +13,7 @@ namespace Examples;
 internal static class SimpleLinear
 {
    /// <summary>
-   /// Demonstrates a simple linear pipeline
+   /// Demonstrates a simple linear pipeline that makes a prediction about today
    /// </summary>
    public static async Task Numerology()
    {
