@@ -8,31 +8,33 @@ namespace FluentPipelines;
 public class AsyncAction<TIn>
 {
    readonly Func<TIn, Task> func;
-
-   public AsyncAction(Func<TIn, Task> f)
+   public string Name { get; }
+   public AsyncAction(Func<TIn, Task> f, string? nameOverride=null)
    {
       this.func = f;
+      Name = nameOverride ?? f.Method.Name;
    }
-   public AsyncAction(Action<TIn> f)
+   public AsyncAction(Action<TIn> f, string? nameOverride = null)
    {
       this.func = input =>
       {
          f(input);
          return Task.CompletedTask;
       };
+      Name = nameOverride ?? f.Method.Name;
    }
 
    public Task Invoke(TIn input) => func.Invoke(input);
 
-   public IPipe<TIn> ToPipe(string name)
+   public IPipe<TIn> ToPipe()
    {
       AsyncFunc<TIn, object> aF = new(async input =>
       {
          await this.func.Invoke(input);
          return new object();
-      });
+      }, Name);
 
-      return new Pipe<TIn, object>(aF, name);
+      return new Pipe<TIn, object>(aF);
 
    }
 

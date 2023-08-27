@@ -18,16 +18,16 @@ public class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    /// </summary>
    protected virtual bool? WarnIfResultUnusedOverride => null;
 
-   public Pipe(Func<TIn, TOut> func, string? name = null) : this(new AsyncFunc<TIn,TOut>(func), name)
+   public Pipe(Func<TIn, TOut> func, string? name = null) : this(new AsyncFunc<TIn,TOut>(func, name))
    {
    }
-   public Pipe(Func<TIn, Task<TOut>> func, string? name = null) : this(new AsyncFunc<TIn, TOut>(func), name)
+   public Pipe(Func<TIn, Task<TOut>> func, string? name = null) : this(new AsyncFunc<TIn, TOut>(func, name))
    {
    }
-   public Pipe(AsyncFunc<TIn, TOut> func, string? name = null)
+   public Pipe(AsyncFunc<TIn, TOut> func)
    {
       this.func = func;
-      Name = name ?? string.Empty;
+      Name = func.Name;
    }
 
    internal Task Run(AutoDisposableValue<TIn> input) => Run(input, new SharedExecutionSettings());
@@ -39,13 +39,13 @@ public class Pipe<TIn, TOut> : IPipe<TIn,TOut>
 
       async Task Sub()
       {
-         PrintStatus("Running");
+         PrintStatus("Running", Verbosity.Minimal);
          TIn val = input.Value;
          TOut result = await func.Invoke(val);
 
          Cleanup(input, val, result);
 
-         PrintStatus("Completed");
+         PrintStatus("Completed", Verbosity.Normal);
          await RunSubsequent(result, executionSettings, true);
 
 
@@ -56,7 +56,7 @@ public class Pipe<TIn, TOut> : IPipe<TIn,TOut>
          {
             
 
-            PrintStatus("Cleaning Up");
+            PrintStatus("Cleaning Up", Verbosity.Verbose);
             bool outputIsInput = object.ReferenceEquals(val, result);
             if (outputIsInput)
             {
@@ -91,11 +91,11 @@ public class Pipe<TIn, TOut> : IPipe<TIn,TOut>
          }
 
 
-         void PrintStatus(string status)
+         void PrintStatus(string status, Verbosity minVerbosityLevel)
          {
-            if (executionSettings.PrintNameUponExecute && Name.Length != 0)
+            if (Name.Length != 0 && executionSettings.LogVerbosity >= minVerbosityLevel)
             {
-               executionSettings.Log($"{(Name.Length == 0 ? "(Unnamed Step)" : Name)}: {status}");
+               executionSettings.Log($"{Name}: {status}");
             }
          }
       }
@@ -176,7 +176,7 @@ public class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    /// Creates a pipeline with no input
    /// </summary>
    /// <returns></returns>
-   public virtual Pipeline_Open<TIn, TOut> ToPipeline() => new Pipeline_Open<TIn, TOut>(this, this);
+   public virtual Pipeline_Open<TIn, TOut> ToPipeline() => new(this, this);
 
    public ThenResult<TOut, Pipeline_Open<TIn,TNext>> Then<TNext>(Func<TOut, TNext> next, string? name = null) => ToPipeline().Then(next, name);
    public ThenResult<TOut, Pipeline_Open<TIn, TNext>> Then<TNext>(Pipeline_Open<TOut, TNext> next) => ToPipeline().Then(next);

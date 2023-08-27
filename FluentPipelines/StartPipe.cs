@@ -10,7 +10,7 @@ public sealed class StartPipe<TOut> : StartPipeBase<TOut>, INoInputStartPipe
    {
 
    }
-   public StartPipe(Func<TOut> getInputVal, string? name = null) : base(new AsyncFunc<object, TOut>(o => getInputVal()), name)
+   public StartPipe(Func<TOut> getInputVal, string? name = null) : base(new AsyncFunc<object, TOut>(o => getInputVal(), name ?? getInputVal.Method.Name))
    {
 
    }

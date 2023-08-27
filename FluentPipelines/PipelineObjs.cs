@@ -33,4 +33,10 @@ public readonly record struct Pipeline_RightSealed<TPipelineInput>(IPipe<TPipeli
 /// <summary>
 /// A Pipeline only exposing its first element (which takes no input). Indended only for use within <see cref="PipeExtensionMethods"/>
 /// </summary>
-public readonly record struct Pipeline_FullySealed(INoInputStartPipe PipelineStart) : IPipeline_LeftSealed;
+public readonly record struct Pipeline_FullySealed(INoInputStartPipe PipelineStart) : IPipeline_LeftSealed
+{
+   /// <summary>
+   /// Runs the pipeline
+   /// </summary>
+   public Task Run() => PipelineStart.Run();
+}

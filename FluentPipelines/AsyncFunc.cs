@@ -6,14 +6,17 @@
 public class AsyncFunc<TIn,TOut>
 {
    readonly Func<TIn, Task<TOut>> func;
+   public string Name { get; }
 
-   public AsyncFunc(Func<TIn, Task<TOut>> func)
+   public AsyncFunc(Func<TIn, Task<TOut>> func, string? nameOverride=null)
    {
       this.func = func;
+      Name = nameOverride ?? func.Method.Name;
    }
-   public AsyncFunc(Func<TIn, TOut> func)
+   public AsyncFunc(Func<TIn, TOut> func, string? nameOverride = null)
    {
       this.func = input => Task.FromResult(func(input));
+      Name = nameOverride ?? func.Method.Name;
    }
 
    [Obsolete("Input must return a value")]

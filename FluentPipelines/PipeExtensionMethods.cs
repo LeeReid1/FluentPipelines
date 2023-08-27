@@ -143,7 +143,7 @@ public static class PipeExtensionMethods
                                                                                                             Func<T2, Task<TOut>> next,
                                                                                                             string? name = null)
    {
-      return Then(source, new AsyncFunc<T2, TOut>(next), name);
+      return Then(source, new AsyncFunc<T2, TOut>(next, name));
    }
    
    /// <summary>
@@ -153,17 +153,16 @@ public static class PipeExtensionMethods
                                                                                                             Func<T2, TOut> next,
                                                                                                             string? name = null)
    {
-      return Then(source, new AsyncFunc<T2, TOut>(next), name);
+      return Then(source, new AsyncFunc<T2, TOut>(next, name));
    }
 
    /// <summary>
    /// Connects the result of this Then call to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> Then<TPipelineInput, T2, TOut>(this Pipeline_Open<TPipelineInput, T2> source,
-                                                                                                            AsyncFunc<T2, TOut> next,
-                                                                                                            string? name = null)
+                                                                                                            AsyncFunc<T2, TOut> next)
    {
-      return Then(source, new Pipe<T2, TOut>(next, name));
+      return Then(source, new Pipe<T2, TOut>(next));
    }
 
 
@@ -205,7 +204,7 @@ public static class PipeExtensionMethods
                                                                               Func<T2, TOut> next,
                                                                               string? name = null)
    {
-      return Then(source.ToPipeline(), new AsyncFunc<T2, TOut>(next), name);
+      return Then(source.ToPipeline(), new AsyncFunc<T2, TOut>(next, name));
    }
    
    /// <summary>
@@ -215,7 +214,7 @@ public static class PipeExtensionMethods
                                                                                                             Func<T2, TOut> next,
                                                                                                             string? name = null)
    {
-      return Then(source, new AsyncFunc<T2, TOut>(next), name);
+      return Then(source, new AsyncFunc<T2, TOut>(next, name));
    }
    
    /// <summary>
@@ -225,17 +224,16 @@ public static class PipeExtensionMethods
                                                                                                             Func<T2, Task<TOut>> next,
                                                                                                             string? name = null)
    {
-      return Then(source, new AsyncFunc<T2, TOut>(next), name);
+      return Then(source, new AsyncFunc<T2, TOut>(next, name));
    }
 
    /// <summary>
    /// Connects the result of this Then call to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed< TOut>> Then<T2, TOut>(this Pipeline_LeftSealed<T2> source,
-                                                                                                            AsyncFunc<T2, TOut> next,
-                                                                                                            string? name = null)
+                                                                                                            AsyncFunc<T2, TOut> next)
    {
-      return Then(source, new Pipe<T2, TOut>(next, name));
+      return Then(source, new Pipe<T2, TOut>(next));
    }
 
 
@@ -274,18 +272,17 @@ public static class PipeExtensionMethods
                                                                                                             Action<T2> next,
                                                                                                             string? name = null)
    {
-      return Then(source, new AsyncAction<T2>(next), name);
+      return Then(source, new AsyncAction<T2>(next, name));
    }
 
    /// <summary>
    /// Connects the result of this Then call to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this Pipeline_Open<TPipelineInput, T2> source,
-                                                                                                            AsyncAction<T2> next,
-                                                                                                            string? name = null)
+                                                                                                            AsyncAction<T2> next)
    {
 
-      return Then(source, next.ToPipe(name ?? string.Empty));
+      return Then(source, next.ToPipe());
    }
 
 
@@ -330,7 +327,7 @@ public static class PipeExtensionMethods
                                                                    Action<T2> next,
                                                                    string? name = null)
    {
-      return Then(source, new AsyncAction<T2>(next), name);
+      return Then(source, new AsyncAction<T2>(next, name));
    }
 
    public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
@@ -342,11 +339,10 @@ public static class PipeExtensionMethods
    /// Connects the result of this Then call to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this Pipeline_LeftSealed<T2> source,
-                                                               AsyncAction<T2> next,
-                                                               string? name = null)
+                                                               AsyncAction<T2> next)
    {
 
-      return Then(source, next.ToPipe(name ?? string.Empty));
+      return Then(source, next.ToPipe());
    }
 
    public static ThenResult<T2, Pipeline_FullySealed> Then<T1, T2>(this ThenResult<T1, Pipeline_LeftSealed<T2>> source,
@@ -392,17 +388,16 @@ public static class PipeExtensionMethods
                                                                                                    Func<T2, TOut> next,
                                                                                                    string? name = null)
    {
-      return And(thenSource, new AsyncFunc<T2, TOut>(next), name);
+      return And(thenSource, new AsyncFunc<T2, TOut>(next, name));
    }
 
    /// <summary>
    /// Connects the result of this Then call to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> And<TPipelineInput, T2, TOut>(this ThenResult<T2, Pipeline_Open<TPipelineInput, T2>> thenSource,
-                                                                                                   AsyncFunc<T2, TOut> next,
-                                                                                                   string? name = null)
+                                                                                                   AsyncFunc<T2, TOut> next)
    {
-      return And(thenSource, new Pipe<T2, TOut>(next, name));
+      return And(thenSource, new Pipe<T2, TOut>(next));
    }
 
 
@@ -436,7 +431,7 @@ public static class PipeExtensionMethods
                                                                                          string? name = null)
       where TPipeline : IPipeline_LeftSealed
    {
-      return And(source, new AsyncFunc<T2, TOut>(next), name);
+      return And(source, new AsyncFunc<T2, TOut>(next, name));
    }
    
    /// <summary>
@@ -448,7 +443,7 @@ public static class PipeExtensionMethods
                                                                                           string? name = null)
       where TPipeline : IPipeline_LeftSealed
    {
-      return And(source, new AsyncFunc<T2, TOut>(next), name);
+      return And(source, new AsyncFunc<T2, TOut>(next, name));
    }
 
 
@@ -456,11 +451,10 @@ public static class PipeExtensionMethods
    /// Connects the result of this And call to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> And<T2, TPipeline, TOut>(this ThenResult<T2, TPipeline> source,
-                                                                                    AsyncFunc<T2, TOut> next,
-                                                                                    string? name = null)
+                                                                                    AsyncFunc<T2, TOut> next)
       where TPipeline : IPipeline_LeftSealed
    {
-      return And(source, (IPipe<T2, TOut>)new Pipe<T2, TOut>(next, name));
+      return And(source, (IPipe<T2, TOut>)new Pipe<T2, TOut>(next));
    }
 
 
@@ -492,18 +486,17 @@ public static class PipeExtensionMethods
                                                                                                             Action<T2> next,
                                                                                                             string? name = null)
    {
-      return And(source, new AsyncAction<T2>(next), name);
+      return And(source, new AsyncAction<T2>(next, name));
    }
 
    /// <summary>
    /// Connects the result of this And call to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> And<TPipelineInput, T2>(this ThenResult<T2, Pipeline_Open<TPipelineInput, T2>> source,
-                                                                                                            AsyncAction<T2> next,
-                                                                                                            string? name = null)
+                                                                                                            AsyncAction<T2> next)
    {
 
-      return And(source, next.ToPipe(name ?? string.Empty));
+      return And(source, next.ToPipe());
    }
 
 
@@ -530,19 +523,18 @@ public static class PipeExtensionMethods
                                                                                                             string? name = null)
       where TPipeline : IPipeline_LeftSealed
    {
-      return And<TPipelineInput, T2, TPipeline>(source, new AsyncAction<T2>(next), name);
+      return And<TPipelineInput, T2, TPipeline>(source, new AsyncAction<T2>(next, name));
    }
 
    /// <summary>
    /// Connects the result of this And call to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_FullySealed> And<TPipelineInput, T2, TPipeline>(this ThenResult<T2, TPipeline> source,
-                                                                                                            AsyncAction<T2> next,
-                                                                                                            string? name = null)
+                                                                                                            AsyncAction<T2> next)
       where TPipeline : IPipeline_LeftSealed
    {
 
-      return And<TPipelineInput, T2, TPipeline>(source, next.ToPipe(name ?? string.Empty));
+      return And<TPipelineInput, T2, TPipeline>(source, next.ToPipe());
    }
 
 
