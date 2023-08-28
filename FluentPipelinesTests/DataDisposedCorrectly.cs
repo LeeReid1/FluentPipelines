@@ -154,7 +154,7 @@ public class DataDisposedCorrectly
 
       var pipeline = new StartPipe<IDisposable>(mock.Object);
 
-      setupPipelineMiddle(pipeline, MiddleStepA, MiddleStepB).Then(a => completed++);
+      setupPipelineMiddle(pipeline, MiddleStepA, MiddleStepB).Then<T>(a => completed++);
                                           
       Assert.AreEqual(0, disposedCount);
       Assert.AreEqual(0, completed);

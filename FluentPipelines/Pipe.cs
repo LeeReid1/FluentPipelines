@@ -176,10 +176,8 @@ public class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    /// Creates a pipeline with no input
    /// </summary>
    /// <returns></returns>
-   public virtual Pipeline_Open<TIn, TOut> ToPipeline() => new(this, this);
+   public Pipeline_Open<TIn, TOut> ToPipeline() => new(this, this);
 
-   public ThenResult<TOut, Pipeline_Open<TIn,TNext>> Then<TNext>(Func<TOut, TNext> next, string? name = null) => ToPipeline().Then(next, name);
-   public ThenResult<TOut, Pipeline_Open<TIn, TNext>> Then<TNext>(Pipeline_Open<TOut, TNext> next) => ToPipeline().Then(next);
-   public ThenResult<TOut, Pipeline_RightSealed<TIn>> Then<TNext>(Pipeline_RightSealed<TOut> next) => ToPipeline().Then(next);
+
 }
 

@@ -12,8 +12,8 @@ internal static class ConstructInPieces
 
       var pipeline = new StartPipe<string>(GetContent)
                      .Then(SplitIntoWords)
-                        .Then(SaveToFile)
-                        .And(CreateCountWordsPipeline());
+                     .Then(SaveToFile)
+                     .And(CreateCountWordsPipeline());
       // Unlike the simple branching example, if we call .And() here now, we use the result of SplitInWords again
 
 
@@ -24,16 +24,28 @@ internal static class ConstructInPieces
    /// <summary>
    /// Constructs a pipeline branch
    /// </summary>
-   static Pipeline_RightSealed<string[]> CreateCountWordsPipeline()
+   static IAsPipeline<Pipeline_RightSealed<string[]>> CreateCountWordsPipeline()
    {
       return new Pipe<string[], int>(CountWordsContainingLetterE)
                                     .Then(CountToMessage)
-                                    .Then(Console.WriteLine).Pipeline;
+                                    .Then(Console.WriteLine);
    }
 
 
+   /// <summary>
+   /// Retrieves content for processing
+   /// </summary>
+   /// <returns></returns>
    static string GetContent() => @"This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission.";
+
+   /// <summary>
+   /// Splits a string into words
+   /// </summary>
    static string[] SplitIntoWords(string s) => s.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+   /// <summary>
+   /// Saves a text file to disk (mock just for example)
+   /// </summary>
    static Task SaveToFile(string[] lines)
    {
       // You would save as a CSV file here but
@@ -45,5 +57,11 @@ internal static class ConstructInPieces
    }
 
    static int CountWordsContainingLetterE(string[] words) => words.Count(word => word.Contains('e', StringComparison.InvariantCultureIgnoreCase));
+   
+   /// <summary>
+   /// Converts the count into a message
+   /// </summary>
+   /// <param name="wordCount"></param>
+   /// <returns></returns>
    static string CountToMessage(int wordCount) => $"Found {wordCount} words containing the letter E";
 }

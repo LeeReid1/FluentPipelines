@@ -7,7 +7,7 @@
 internal class PipeEnd<TIn> : Pipe<TIn, object>
 {
    protected override bool? WarnIfResultUnusedOverride => false;
-   public PipeEnd(Action<TIn> finalAct, string? name=null) : base(o => { finalAct(o); return new object(); }, name)
+   public PipeEnd(Action<TIn> finalAct, string? name=null) : this(new AsyncAction<TIn>(finalAct, name))
    {
       
    }
@@ -17,7 +17,17 @@ internal class PipeEnd<TIn> : Pipe<TIn, object>
    /// </summary>
    /// <param name="finalAct"></param>
    /// <param name="name"></param>
-   public PipeEnd(Func<TIn, Task> finalAct, string? name=null) : base(async o => { await finalAct(o); return new object(); }, name)
+   public PipeEnd(Func<TIn, Task> finalAct, string? name=null) : this(new AsyncAction<TIn>(finalAct, name))
+   {
+      
+   }
+   
+   /// <summary>
+   /// Creates a PipeEnd from an asynk task
+   /// </summary>
+   /// <param name="finalAct"></param>
+   /// <param name="name"></param>
+   public PipeEnd(AsyncAction<TIn> finalAct) : base(async o => { await finalAct.Invoke(o); return new object(); }, finalAct.Name)
    {
       
    }

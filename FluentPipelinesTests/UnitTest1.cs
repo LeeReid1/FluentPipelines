@@ -12,7 +12,7 @@ public class UnitTest1
       int pipelineResult = 0;
       StartPipe<int> start = new(() => startVal);
 
-      start.Then(g => g * 2).Then(i=>i+7).Then(result => 
+      start.Then<int,int>(g => g * 2).Then(i=>i+7).Then(result => 
       {
          pipelineResult = result;
          return new object(); 
@@ -37,7 +37,7 @@ public class UnitTest1
       int pipelineResult2 = 0;
       StartPipe<int> start = new(() => startVal);
 
-      start.Then(g => g * 2)
+      start.Then(i => i * 2)
                .Then(i => i + 7)
                   .Then(result =>
       {
@@ -52,6 +52,7 @@ public class UnitTest1
 
       Assert.AreEqual(11 * 2 + 7, pipelineResult1);
       Assert.AreEqual((11 * 2 + 7)*13, pipelineResult2);
+
    }
 
    [TestMethod]
@@ -60,7 +61,7 @@ public class UnitTest1
       int pipelineResult1 = 0;
       int pipelineResult2 = 0;
 
-      var branch1 = new Pipe<int, int>(i => i * 5, "times 5").Then(i => pipelineResult1 = i, "Set result 1").Pipeline;
+      var branch1 = new Pipe<int, int>(i => i * 5, "times 5").Then(i => pipelineResult1 = i, "Set result 1");
 
       PushStartPipe<int> start = new();
 
@@ -89,13 +90,11 @@ public class UnitTest1
 
       StartPipe<int> start = new(() => 11);
 
-
-
       start.Then(g => g * 2, "Multiply by 2")
-               .Then(branch1.Pipeline)
+               .Then(branch1)
                .And(MultiplyBy3, "times 3 and wait")
-               .Then(i => i - 1000, "minus 1000")
-               .Then(i=>pipelineResult2 = i, "Save Result 2");
+                  .Then(i => i - 1000, "minus 1000")
+                  .Then(i=>pipelineResult2 = i, "Save Result 2");
 
 
       await start.Run();

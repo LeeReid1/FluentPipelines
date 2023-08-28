@@ -3,10 +3,12 @@
 /// <summary>
 /// Wraps a function to ensure it returns asyncronously
 /// </summary>
-public class AsyncFunc<TIn,TOut>
+public sealed class AsyncFunc<TIn,TOut> : IAsPipeline<Pipeline_Open<TIn, TOut>>
 {
    readonly Func<TIn, Task<TOut>> func;
    public string Name { get; }
+
+   Pipeline_Open<TIn, TOut> IAsPipeline<Pipeline_Open<TIn, TOut>>.AsPipeline => new(new Pipe<TIn,TOut>(this));
 
    public AsyncFunc(Func<TIn, Task<TOut>> func, string? nameOverride=null)
    {

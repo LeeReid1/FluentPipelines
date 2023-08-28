@@ -53,3 +53,9 @@ public interface IPipeline_RightOpen<TOut>
 
 }
 
+/// <summary>
+/// Holds a Pipeline
+/// </summary>
+public interface IPipeline_Open<TPipelineInput, TOut> : IPipeline_LeftOpen<TPipelineInput>, IPipeline_RightOpen<TOut>
+{
+}

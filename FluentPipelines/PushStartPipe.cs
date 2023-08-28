@@ -5,12 +5,14 @@ namespace FluentPipelines;
 /// The start of a pipeline where the value is provided when <see cref="Run(TOut, Pipelines.SharedExecutionSettings?, bool)"/> is called
 /// </summary>
 /// <typeparam name="TOut"></typeparam>
-public sealed class PushStartPipe<TOut>
+public sealed class PushStartPipe<TOut> : IAsPipeline<Pipeline_LeftSealed<TOut>>
 {
    readonly object lockObj = new();
    readonly StartPipe<TOut> pipe;
 
    TOut? lastValue = default;
+
+   Pipeline_LeftSealed<TOut> IAsPipeline<Pipeline_LeftSealed<TOut>>.AsPipeline => ToPipeline();
 
    public PushStartPipe(string? name=null)
    {
@@ -54,9 +56,5 @@ public sealed class PushStartPipe<TOut>
          return this.pipe.ToPipeline();
       }
    }
-
-   public ThenResult<TOut, Pipeline_LeftSealed<TNext>> Then<TNext>(Func<TOut, TNext> next, string? name = null) => ToPipeline().Then(next, name);
-   public ThenResult<TOut, Pipeline_LeftSealed<TNext>> Then<TNext>(Pipeline_Open<TOut, TNext> next) => ToPipeline().Then(next);
-   public ThenResult<TOut, Pipeline_FullySealed> Then<TNext>(Pipeline_RightSealed<TOut> next) => ToPipeline().Then(next);
 
 }

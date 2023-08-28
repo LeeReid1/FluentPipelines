@@ -5,7 +5,7 @@
 /// </summary>
 public static class BranchAndJoinPipes
 {
-   public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4>>> BranchThenJoin<T1, T2, T3, T4>(this Pipeline_Open<T1, T2> input,
+   public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4>>> BranchThenJoin<T1, T2, T3, T4>(this IAsPipeline<Pipeline_Open<T1, T2>> input,
                                                                                            Func<T2, T3> f1,
                                                                                            Func<T2, T4> f2,
                                                                                            bool parallel=false)
@@ -13,14 +13,14 @@ public static class BranchAndJoinPipes
       return BranchThenJoin(input, new AsyncFunc<T2, T3>(f1), new AsyncFunc<T2, T4>(f2), parallel);
    }
 
-   public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4>>> BranchThenJoin<T1, T2, T3, T4>(this Pipeline_Open<T1, T2> input,
+   public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4>>> BranchThenJoin<T1, T2, T3, T4>(this IAsPipeline<Pipeline_Open<T1, T2>> input,
                                                                                            AsyncFunc<T2, T3> f1,
                                                                                            AsyncFunc<T2, T4> f2,
                                                                                            bool parallel = false)
    {
       return input.Then(input => BranchThenJoin(input, f1, f2, parallel));
    }
-   public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4, T5>>> BranchThenJoin<T1, T2, T3, T4, T5>(this Pipeline_Open<T1, T2> input,
+   public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4, T5>>> BranchThenJoin<T1, T2, T3, T4, T5>(this IAsPipeline<Pipeline_Open<T1, T2>> input,
                                                                                            Func<T2, T3> f1,
                                                                                            Func<T2, T4> f2,
                                                                                            Func<T2, T5> f3,
@@ -29,7 +29,7 @@ public static class BranchAndJoinPipes
       return BranchThenJoin(input, new AsyncFunc<T2, T3>(f1), new AsyncFunc<T2, T4>(f2), new AsyncFunc<T2, T5>(f3), parallel);
    }
 
-   public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4, T5>>> BranchThenJoin<T1, T2, T3, T4, T5>(this Pipeline_Open<T1, T2> input,
+   public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4, T5>>> BranchThenJoin<T1, T2, T3, T4, T5>(this IAsPipeline<Pipeline_Open<T1, T2>> input,
                                                                                            AsyncFunc<T2, T3> f1,
                                                                                            AsyncFunc<T2, T4> f2,
                                                                                            AsyncFunc<T2, T5> f3,
@@ -37,7 +37,7 @@ public static class BranchAndJoinPipes
    {
       return input.Then(input => BranchThenJoin(input, f1, f2, f3, parallel));
    }
-   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4>>> BranchThenJoin<T2, T3, T4>(this Pipeline_LeftSealed<T2> input,
+   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4>>> BranchThenJoin<T2, T3, T4>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                            Func<T2, T3> f1,
                                                                                            Func<T2, T4> f2,
                                                                                            bool parallel = false)
@@ -45,7 +45,7 @@ public static class BranchAndJoinPipes
       return BranchThenJoin(input, new AsyncFunc<T2, T3>(f1), new AsyncFunc<T2, T4>(f2), parallel);
    }
 
-   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4>>> BranchThenJoin<T2, T3, T4>(this Pipeline_LeftSealed<T2> input,
+   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4>>> BranchThenJoin<T2, T3, T4>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                            AsyncFunc<T2, T3> f1,
                                                                                            AsyncFunc<T2, T4> f2,
                                                                                            bool parallel = false)
@@ -54,7 +54,7 @@ public static class BranchAndJoinPipes
    }
 
 
-   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4, T5>>> BranchThenJoin<T2, T3, T4, T5>(this Pipeline_LeftSealed<T2> input,
+   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4, T5>>> BranchThenJoin<T2, T3, T4, T5>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                            Func<T2, T3> f1,
                                                                                            Func<T2, T4> f2,
                                                                                            Func<T2, T5> f3,
@@ -63,7 +63,7 @@ public static class BranchAndJoinPipes
       return BranchThenJoin(input, f1, f2, f3, parallel);
    }
 
-   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4, T5>>> BranchThenJoin<T2, T3, T4, T5>(this Pipeline_LeftSealed<T2> input,
+   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4, T5>>> BranchThenJoin<T2, T3, T4, T5>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                            AsyncFunc<T2, T3> f1,
                                                                                            AsyncFunc<T2, T4> f2,
                                                                                            AsyncFunc<T2, T5> f3,

@@ -5,10 +5,13 @@ namespace FluentPipelines;
 /// <summary>
 /// Wraps an action to ensure it returns asyncronously
 /// </summary>
-public class AsyncAction<TIn>
+public class AsyncAction<TIn> : IAsPipeline<Pipeline_RightSealed<TIn>>
 {
    readonly Func<TIn, Task> func;
    public string Name { get; }
+
+   Pipeline_RightSealed<TIn> IAsPipeline<Pipeline_RightSealed<TIn>>.AsPipeline => new(ToPipe());
+
    public AsyncAction(Func<TIn, Task> f, string? nameOverride=null)
    {
       this.func = f;
