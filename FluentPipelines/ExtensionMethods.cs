@@ -2,10 +2,10 @@
 public static class ExtensionMethods
 {
 
-   public static Task Run<TSource, TPipeline>(this ThenResult<TSource, TPipeline> thenResult, SharedExecutionSettings? settings = null)
+   public static Task Run<TPipeline>(this IAsPipeline<TPipeline> thenResult, SharedExecutionSettings? settings = null)
       where TPipeline : IPipeline_LeftSealed
    {
-      return thenResult.Pipeline.PipelineStart.Run(settings);
+      return thenResult.AsPipeline.PipelineStart.Run(settings);
    }
 
    #region THEN
