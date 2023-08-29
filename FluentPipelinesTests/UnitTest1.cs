@@ -61,7 +61,7 @@ public class UnitTest1
       int pipelineResult1 = 0;
       int pipelineResult2 = 0;
 
-      var branch1 = new Pipe<int, int>(i => i * 5, "times 5").Then(i => pipelineResult1 = i, "Set result 1");
+      var branch1 = new AsyncFunc<int, int>(i => i * 5, "times 5").Then(i => pipelineResult1 = i, "Set result 1");
 
       PushStartPipe<int> start = new();
 
@@ -86,7 +86,7 @@ public class UnitTest1
       int pipelineResult1 = 0;
       int pipelineResult2 = 0;
 
-      var branch1 = new Pipe<int, int>(MultiplyBy5, "times 5 and wait").Then(i => pipelineResult1 = i, "Set result 1");
+      var branch1 = new AsyncFunc<int, int>(MultiplyBy5).Then(i => pipelineResult1 = i, "Set result 1");
 
       StartPipe<int> start = new(() => 11);
 

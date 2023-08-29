@@ -120,7 +120,7 @@ public class ThenTests
    {
       double? val1 = null;
 
-      var branch = new Pipe<double, double>(Negate).Then(SetVal1); // Negate is Left+Right Open, SetVal is Right Closed
+      var branch = new AsyncFunc<double, double>(Negate).Then(SetVal1); // Negate is Left+Right Open, SetVal is Right Closed
 
       StartPipe<double> s = new(r.NextDouble);
       s.Then(branch);
@@ -143,7 +143,7 @@ public class ThenTests
    {
       double? val1 = null;
 
-      var branch = new Pipe<double, double>(Negate).Then(SetVal1); // Negate is Left+Right Open, SetVal is Right Closed
+      var branch = new AsyncFunc<double, double>(Negate).Then(SetVal1); // Negate is Left+Right Open, SetVal is Right Closed
 
       StartPipe<double> s = new(r.NextDouble);
       s.Then(branch);

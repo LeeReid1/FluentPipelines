@@ -9,39 +9,33 @@ internal static class ConstructInPieces
 {
    public static Task RunPipeline()
    {
+      var pipeline = new StartPipe<string>(Web.RetrieveExampleWebsiteText)
+                     .Then(StringManipulation.SplitIntoWords)
+                        .Then(CreateCountWordsPipeline()) // Append an entire branch
+                        .And(SaveToFile);
 
-      var pipeline = new StartPipe<string>(GetContent)
-                     .Then(SplitIntoWords)
-                     .Then(SaveToFile)
-                     .And(CreateCountWordsPipeline());
-      // Unlike the simple branching example, if we call .And() here now, we use the result of SplitInWords again
+      // Notice that the call to .And() above uses the result of SplitInWords again
+      // This is because we packed an entire pipeline branch into one Then() call
 
-
-      // Run the async pipeline
+      // Run the pipeline
       return pipeline.Run(new SharedExecutionSettings() { LogVerbosity = Verbosity.Minimal });
    }
 
    /// <summary>
-   /// Constructs a pipeline branch
+   /// Constructs a pipeline branch that prints how many words contain the letter E
    /// </summary>
    static IAsPipeline<Pipeline_RightSealed<string[]>> CreateCountWordsPipeline()
    {
-      return new Pipe<string[], int>(CountWordsContainingLetterE)
+      // To construct a branch of a pipeline without a start point to graft onto
+      // create a new AsyncFunc or AsyncAction object, then call Then etc in the 
+      // normal way.
+      // This branch will need to be grafted onto another pipeline that has
+      // a StartPipe (or similar) before it can be executed
+      return new AsyncFunc<string[], int>(StringManipulation.CountWordsContainingLetterE)
                                     .Then(CountToMessage)
                                     .Then(Console.WriteLine);
    }
 
-
-   /// <summary>
-   /// Retrieves content for processing
-   /// </summary>
-   /// <returns></returns>
-   static string GetContent() => @"This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission.";
-
-   /// <summary>
-   /// Splits a string into words
-   /// </summary>
-   static string[] SplitIntoWords(string s) => s.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
    /// <summary>
    /// Saves a text file to disk (mock just for example)
@@ -56,12 +50,10 @@ internal static class ConstructInPieces
       return Task.Delay(1000);
    }
 
-   static int CountWordsContainingLetterE(string[] words) => words.Count(word => word.Contains('e', StringComparison.InvariantCultureIgnoreCase));
+   
    
    /// <summary>
    /// Converts the count into a message
    /// </summary>
-   /// <param name="wordCount"></param>
-   /// <returns></returns>
    static string CountToMessage(int wordCount) => $"Found {wordCount} words containing the letter E";
 }

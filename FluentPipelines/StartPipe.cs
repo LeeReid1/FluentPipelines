@@ -14,6 +14,11 @@ public sealed class StartPipe<TOut> : INoInputStartPipe, IAsPipeline<Pipeline_Le
    {
 
    }
+   public StartPipe(Func<Task<TOut>> getInputVal, string? name = null) : this(new AsyncFunc<object, TOut>(o => getInputVal(), name ?? getInputVal.Method.Name))
+   {
+
+   }
+   
    public StartPipe(Func<TOut> getInputVal, string? name = null) : this(new AsyncFunc<object, TOut>(o => getInputVal(), name ?? getInputVal.Method.Name))
    {
 

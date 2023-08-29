@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Examples;
 
 /// <summary>
-/// Demonstrates a simple pipeline that branches
+/// Demonstrates a simple pipeline that branches. All see <seealso cref="ConstructInPieces"/>
 /// </summary>
 internal static class SimpleBranching
 {
@@ -16,21 +16,18 @@ internal static class SimpleBranching
    {
 
       
-      var pipeline = new StartPipe<string>(GetContent)
-                     .Then(SplitIntoWords)
+      var pipeline = new StartPipe<string>(Web.RetrieveExampleWebsiteText)
+                     .Then(StringManipulation.SplitIntoWords)
                         .Then(SaveToFile)
                         .And(CountWordsContainingLetterE) // And takes the INPUT of the previous Then, rather than the result of the previous Then
                            .Then(CountToMessage)
-                           .Then(Console.WriteLine);
-      // Note if we call And here now, we use thee the result of CountToMessage
-      // See ConstructInPieces to see how to keep using the result of SplitIntoWords
+                              .Then(Console.WriteLine);
+
 
       // Run the async pipeline
       return pipeline.Run(new SharedExecutionSettings() { LogVerbosity = Verbosity.Minimal });
    }
 
-   static string GetContent() => @"This domain is for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission.";
-   static string[] SplitIntoWords(string s) => s.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
    static Task SaveToFile(string[] lines)
    {
       // You would save as a CSV file here but

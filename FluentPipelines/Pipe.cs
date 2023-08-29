@@ -6,7 +6,7 @@ namespace FluentPipelines;
 /// <summary>
 /// A pipeline stage that accepts input, provides it to a function, and passes the result to any listening <see cref="IPipeOut{TOut}"/>
 /// </summary>
-public class Pipe<TIn, TOut> : IPipe<TIn,TOut>
+internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
 {
    readonly List<IPipe<TOut>> subsequentPipes = new();
    readonly AsyncFunc<TIn, TOut> func;
