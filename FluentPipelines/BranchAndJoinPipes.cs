@@ -591,6 +591,35 @@ public static class BranchAndJoinPipes
       };
    }
    
+   
+   public static IAsPipeline<IPipeline_RightOpen<DisposableTuple<T1, T2>>> Join<T1, T2, TPipeline1>(this IAsPipeline<TPipeline1> f1,
+                                                                                                   Func<T1, T2> f2)
+      where TPipeline1 : IPipeline_RightOpen<T1>
+   {
+      Pipeline_Open<T1, T2> p = new AsyncFunc<T1, T2>(f2).AsPipeline;
+
+      return Join<T1,T2, TPipeline1, Pipeline_Open<T1,T2>>(f1, p);
+   }
+   
+   
+   public static IAsPipeline<IPipeline_RightOpen<DisposableTuple<T1, T2>>> Join<T1, T2, TPipeline1, TPipeline2>(this IAsPipeline<TPipeline1> f1,
+                                                                                                   IAsPipeline<TPipeline2> f2)
+      where TPipeline1 : IPipeline_RightOpen<T1>
+      where TPipeline2 : IPipeline_RightOpen<T2>
+   {
+      return new Join<T1, T2>(f1.AsPipeline.Last, f2.AsPipeline.Last);
+   }
+   public static ThenResult<DisposableTuple<T1, T2>, IPipeline_RightOpen<T3>> JoinThen<T1, T2, T3, TPipeline1, TPipeline2, TPipeline3>(this IAsPipeline<TPipeline1> f1,
+                                                                                                      IAsPipeline<TPipeline2> f2,
+                                                                                                      IAsPipeline<Pipeline_Open<DisposableTuple<T1, T2>, T3>> f3)
+      where TPipeline1 : IPipeline_RightOpen<T1>
+      where TPipeline2 : IPipeline_RightOpen<T2>
+      //where TPipeline3 : Pipeline_Open<DisposableTuple<T1,T2>, T3>
+   {
+      return Join<T1, T2, TPipeline1, TPipeline2>(f1, f2).Then(f3);
+   }
+   
+   
 
    static byte DoNothing<T>(T input) => default;
 }

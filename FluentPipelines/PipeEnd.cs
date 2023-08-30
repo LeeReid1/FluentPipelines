@@ -1,4 +1,7 @@
-﻿namespace FluentPipelines;
+﻿using System.Runtime.CompilerServices;
+using System.Xml.Linq;
+
+namespace FluentPipelines;
 
 /// <summary>
 /// A pipe that accepts input but does not return a value intended for a subsequent pipe
@@ -30,5 +33,10 @@ internal class PipeEnd<TIn> : Pipe<TIn, object>
    public PipeEnd(AsyncAction<TIn> finalAct) : base(async o => { await finalAct.Invoke(o); return new object(); }, finalAct.Name)
    {
       
+   }
+
+   static AsyncFunc<TIn, object> ToAsyncFunc(Func<TIn, Task> finalAct, string name)
+   {
+      return new AsyncFunc<TIn, object>(async tuple=> { await finalAct.Invoke(tuple); return new object(); }, name);
    }
 }

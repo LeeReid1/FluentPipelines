@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Threading;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FluentPipelines;
 
@@ -11,24 +12,28 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    readonly List<IPipe<TOut>> subsequentPipes = new();
    readonly AsyncFunc<TIn, TOut> func;
    readonly SemaphoreSlim semaphore = new(1);
-   public string Name { get; }
+   public string Name => func.Name;
 
    /// <summary>
    /// Overrides WarnIfResultUnused in execution settings
    /// </summary>
    protected virtual bool? WarnIfResultUnusedOverride => null;
 
-   public Pipe(Func<TIn, TOut> func, string? name = null) : this(new AsyncFunc<TIn,TOut>(func, name))
+   Pipeline_Open<TIn, TOut>? asPipeline;
+   Pipeline_Open<TIn, TOut> IAsPipeline<Pipeline_Open<TIn, TOut>>.AsPipeline => asPipeline ??= new(this);
+
+   public Pipe(Func<TIn, TOut> func, string? name = null) : this(new AsyncFunc<TIn, TOut>(func, name))
    {
    }
    public Pipe(Func<TIn, Task<TOut>> func, string? name = null) : this(new AsyncFunc<TIn, TOut>(func, name))
    {
    }
-   public Pipe(AsyncFunc<TIn, TOut> func)
+   public Pipe(AsyncFunc<TIn, TOut> function) 
    {
-      this.func = func;
-      Name = func.Name;
+      func = function;
    }
+
+
 
    internal Task Run(AutoDisposableValue<TIn> input) => Run(input, new SharedExecutionSettings());
    Task IPipe<TIn>.Run(AutoDisposableValue<TIn> input, SharedExecutionSettings executionSettings) => this.Run(input, executionSettings);
@@ -106,7 +111,7 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    /// <summary>
    /// Passes the result to any listening IPipes
    /// </summary>
-   protected async Task RunSubsequent(TOut result, SharedExecutionSettings executionSettings, bool disposeInput)
+   protected virtual async Task RunSubsequent(TOut result, SharedExecutionSettings executionSettings, bool disposeInput)
    {
       if (subsequentPipes.Count == 0)
       {
@@ -172,12 +177,17 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    public static implicit operator Pipe<TIn, TOut>(Func<TIn, Task<TOut>> func) => new(func); // DO NOT REVERSE ORDER OF THESE TWO OPERATORS OR TOUT CAN BECOME TASK
    public static implicit operator Pipe<TIn, TOut>(Func<TIn, TOut> func) => new(func); // DO NOT REVERSE ORDER OF THESE TWO OPERATORS OR TOUT CAN BECOME TASK
 
-   /// <summary>
-   /// Creates a pipeline with no input
-   /// </summary>
-   /// <returns></returns>
-   public Pipeline_Open<TIn, TOut> ToPipeline() => new(this, this);
 
+   
 
+   IEnumerable<IPipelineComponent> IPipelineComponent.GetImmediateDownstreamComponents() => this.GetImmediateDownstreamComponents();
+
+   protected virtual IEnumerable<IPipelineComponent> GetImmediateDownstreamComponents()
+   {
+      foreach (var item in subsequentPipes)
+      {
+         yield return item;
+      }
+   }
 }
 

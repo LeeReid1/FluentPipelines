@@ -10,7 +10,8 @@ public class AsyncAction<TIn> : IAsPipeline<Pipeline_RightSealed<TIn>>
    readonly Func<TIn, Task> func;
    public string Name { get; }
 
-   Pipeline_RightSealed<TIn> IAsPipeline<Pipeline_RightSealed<TIn>>.AsPipeline => new(ToPipe());
+   Pipeline_RightSealed<TIn>? _asPipeline;
+   Pipeline_RightSealed<TIn> IAsPipeline<Pipeline_RightSealed<TIn>>.AsPipeline => _asPipeline ??= new(ToPipe());
 
    public AsyncAction(Func<TIn, Task> f, string? nameOverride=null)
    {

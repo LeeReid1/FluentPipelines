@@ -8,7 +8,12 @@ public sealed class AsyncFunc<TIn,TOut> : IAsPipeline<Pipeline_Open<TIn, TOut>>
    readonly Func<TIn, Task<TOut>> func;
    public string Name { get; }
 
-   Pipeline_Open<TIn, TOut> IAsPipeline<Pipeline_Open<TIn, TOut>>.AsPipeline => new(new Pipe<TIn,TOut>(this));
+
+   Pipeline_Open<TIn, TOut>? _asPipeline;
+   public Pipeline_Open<TIn, TOut> AsPipeline
+   {
+      get => _asPipeline ??= new(new Pipe<TIn, TOut>(this));
+   }
 
    public AsyncFunc(Func<TIn, Task<TOut>> func, string? nameOverride=null)
    {

@@ -9,4 +9,6 @@ public class SharedExecutionSettings
 
    public Action<string> Log { get; init; } = Console.WriteLine;
    public Verbosity LogVerbosity { get; init; } = Verbosity.None;
+
+   internal ErrorCoordinator ErrorCoordinator = new();
 }

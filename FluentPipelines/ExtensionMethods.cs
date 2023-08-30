@@ -185,6 +185,35 @@ public static class ExtensionMethods
 
    }
 
+
+   public static ThenResult<T2, IPipeline_RightOpen<TOut>> Then<T2, TOut>(this IAsPipeline<IPipeline_RightOpen<T2>> source,
+                                                                               Func<T2, Task<TOut>> next,
+                                                                               string? name = null)
+   {
+      return Then(source, new AsyncFunc<T2, TOut>(next, name));
+   }
+   
+   public static ThenResult<T2, IPipeline_RightOpen<TOut>> Then<T2, TOut>(this IAsPipeline<IPipeline_RightOpen<T2>> source,
+                                                                               Func<T2, TOut> next,
+                                                                               string? name = null)
+   {
+      return Then(source, new AsyncFunc<T2, TOut>(next, name));
+   }
+   public static ThenResult<T2, IPipeline_RightOpen<TOut>> Then<T2, TOut>(this IAsPipeline<IPipeline_RightOpen<T2>> source,
+                                                                          IAsPipeline<Pipeline_Open<T2, TOut>> next)
+   {
+      var src = source.AsPipeline;
+      //var start = src.PipelineStart;
+      var joinFrom = src.Last;
+      var pipeline = next.AsPipeline;
+      var joinTo = pipeline.PipelineStart;
+      var pipelineEnd = (IPipeline_RightOpen<TOut>)new Pipeline_LeftSealed<TOut>(null!, pipeline.Last); // Null should be hidden due to interface cast
+
+      joinFrom.AddListener(joinTo);
+      return new(joinFrom, pipelineEnd);
+
+   }
+
    #endregion
 
    #endregion

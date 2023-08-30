@@ -4,7 +4,7 @@
 /// Begins a pipeline using either a pre-known input, or a preknown input-calculating function
 /// </summary>
 /// <typeparam name="TOut">Type of input this provides to the next pipeline steps</typeparam>
-public sealed class StartPipe<TOut> : INoInputStartPipe, IAsPipeline<Pipeline_LeftSealed<TOut>>
+public sealed class StartPipe<TOut> : INoInputStartPipe, IAsPipeline<Pipeline_LeftSealed<TOut>>, IPipelineComponent
 {
    readonly Pipe<object, TOut> pipe;
 
@@ -29,10 +29,19 @@ public sealed class StartPipe<TOut> : INoInputStartPipe, IAsPipeline<Pipeline_Le
    }
 
 
-   public Task Run(SharedExecutionSettings? executionSettings=null) => pipe.Run(new AutoDisposableValue<object>(1, new()), executionSettings ?? new());
+   public Task Run(SharedExecutionSettings? executionSettings = null)
+   {
+      PipelineComponentMethods.CheckForRecursion(this);
+      return pipe.Run(new AutoDisposableValue<object>(1, new()), executionSettings ?? new());
+   }
 
    /// <summary>
    /// Creates a pipeline with no input
    /// </summary>
    public Pipeline_LeftSealed<TOut> ToPipeline() => new(this, pipe);
+
+   IEnumerable<IPipelineComponent> IPipelineComponent.GetImmediateDownstreamComponents()
+   {
+      yield return pipe;
+   }
 }

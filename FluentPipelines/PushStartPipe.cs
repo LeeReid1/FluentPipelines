@@ -5,7 +5,7 @@ namespace FluentPipelines;
 /// The start of a pipeline where the value is provided when <see cref="Run(TOut, Pipelines.SharedExecutionSettings?, bool)"/> is called
 /// </summary>
 /// <typeparam name="TOut"></typeparam>
-public sealed class PushStartPipe<TOut> : IAsPipeline<Pipeline_LeftSealed<TOut>>
+public sealed class PushStartPipe<TOut> : IAsPipeline<Pipeline_LeftSealed<TOut>>, IPipelineComponent
 {
    readonly object lockObj = new();
    readonly StartPipe<TOut> pipe;
@@ -35,6 +35,7 @@ public sealed class PushStartPipe<TOut> : IAsPipeline<Pipeline_LeftSealed<TOut>>
       {
          try
          {
+            PipelineComponentMethods.CheckForRecursion(this);
             lastValue = value;
             return pipe.Run(executionSettings);
          }
@@ -57,4 +58,9 @@ public sealed class PushStartPipe<TOut> : IAsPipeline<Pipeline_LeftSealed<TOut>>
       }
    }
 
+
+   IEnumerable<IPipelineComponent> IPipelineComponent.GetImmediateDownstreamComponents()
+   {
+      yield return pipe;
+   }
 }
