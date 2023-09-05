@@ -13,14 +13,20 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    readonly AsyncFunc<TIn, TOut> func;
    readonly SemaphoreSlim semaphore = new(1);
    public string Name => func.Name;
+   
 
    /// <summary>
    /// Overrides WarnIfResultUnused in execution settings
    /// </summary>
    protected virtual bool? WarnIfResultUnusedOverride => null;
+   /// <summary>
+   /// The number of pipes this sends results to
+   /// </summary>
+   protected virtual int NoSubsequentPipes => subsequentPipes.Count;
 
    Pipeline_Open<TIn, TOut>? asPipeline;
    Pipeline_Open<TIn, TOut> IAsPipeline<Pipeline_Open<TIn, TOut>>.AsPipeline => asPipeline ??= new(this);
+
 
    public Pipe(Func<TIn, TOut> func, string? name = null) : this(new AsyncFunc<TIn, TOut>(func, name))
    {
@@ -60,9 +66,9 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
          void Cleanup(AutoDisposableValue<TIn> input, TIn val, TOut result)
          {
             
-
+            
             PrintStatus("Cleaning Up", Verbosity.Verbose);
-            bool outputIsInput = object.ReferenceEquals(val, result);
+            bool outputIsInput = InputIsOutput(val, result);
             if (outputIsInput)
             {
                // input was re-used as output
@@ -71,8 +77,7 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
                // they were reading it. Assert that that's not the case
                Debug.Assert(!input.IsShared, $"Pipe {Name} outputs the same {typeof(TIn)} object as the input. This input is shared with other pipes. This can lead to unintended side effects including broken thread-safety, because other pipes will read from this object as or after it has been modified. Copy the input and modify that copy instead.");
 
-
-               if (subsequentPipes.Count == 0 && !input.IsShared)
+               if (NoSubsequentPipes == 0 && !input.IsShared)
                {
                   // Nothing else appears to use this object
                   input.UseComplete();
@@ -107,9 +112,10 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    }
 
 
+   protected virtual bool InputIsOutput(TIn input, TOut output) => object.ReferenceEquals(input, output);
 
    /// <summary>
-   /// Passes the result to any listening IPipes
+   /// Passes the result to any listening IPipes. Also override <see cref="NoSubsequentPipes"/> if overriding this
    /// </summary>
    protected virtual async Task RunSubsequent(TOut result, SharedExecutionSettings executionSettings, bool disposeInput)
    {
@@ -142,7 +148,7 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    /// </summary>
    private async Task AsThreadsafe(Action act)
    {
-      await semaphore.WaitAsync();
+      await semaphore.WaitAsync().ConfigureAwait(false);
       try
       {
          act.Invoke();
@@ -159,10 +165,10 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    /// </summary>
    private async Task AsThreadsafe(Func<Task> act)
    {
-      await semaphore.WaitAsync();
+      await semaphore.WaitAsync().ConfigureAwait(false);
       try
       {
-         await act.Invoke();
+         await act.Invoke().ConfigureAwait(false);
       }
       finally
       {

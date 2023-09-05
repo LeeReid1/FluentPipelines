@@ -20,6 +20,8 @@ public interface IPipeline_LeftSealed
 {
    INoInputStartPipe PipelineStart { get; }
 
+
+
 }
 
 /// <summary>
@@ -51,6 +53,7 @@ public interface IPipeline_RightOpen<TOut>
 {
    IPipeOut<TOut> Last { get; }
 
+
 }
 
 /// <summary>
@@ -58,4 +61,13 @@ public interface IPipeline_RightOpen<TOut>
 /// </summary>
 public interface IPipeline_Open<TPipelineInput, TOut> : IPipeline_LeftOpen<TPipelineInput>, IPipeline_RightOpen<TOut>
 {
+   /// <summary>
+   /// Then
+   /// </summary>
+   public static ThenResult<TOut, Pipeline_RightSealed<TPipelineInput>> operator  >> (IPipeline_Open<TPipelineInput, TOut> lvalue, Action<TOut> rvalue) => ExtensionMethods.Then(lvalue, new AsyncAction<TOut>(rvalue));
+
+   /// <summary>
+   /// Then
+   /// </summary>
+   public static ThenResult<TOut, Pipeline_RightSealed<TPipelineInput>> operator  >> (IPipeline_Open<TPipelineInput, TOut> lvalue, IAsPipeline<Pipeline_RightSealed<TOut>> rvalue) => ExtensionMethods.Then(lvalue,rvalue);
 }

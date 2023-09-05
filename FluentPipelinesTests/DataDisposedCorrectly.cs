@@ -117,7 +117,7 @@ public class DataDisposedCorrectly
 
       static Pipeline_LeftSealed<DisposableTuple<int,int>> Setup(StartPipe<IDisposable> pipeline, Func<IDisposable, int> f1, Func<IDisposable, int> f2)
       {
-         return pipeline.ToPipeline().BranchThenJoin(f1, f2).Pipeline;
+         return pipeline.ToPipeline().BranchThenJoin(f1, f2).AsPipeline;
       }
    }
 

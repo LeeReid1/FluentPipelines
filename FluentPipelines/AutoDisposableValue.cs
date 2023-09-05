@@ -21,7 +21,7 @@ public class AutoDisposableValue<T> : IDisposable
    /// <summary>
    /// True if this takes more than one call to <see cref="UseComplete"/> to be disposed
    /// </summary>
-   public bool IsShared => disposeAfter > 0;
+   public bool IsShared => disposeAfter > 1;
 
    /// <summary>
    /// Creates a new <see cref="AutoDisposableValue{T}"/>

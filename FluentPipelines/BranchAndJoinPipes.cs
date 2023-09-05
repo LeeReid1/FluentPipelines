@@ -205,27 +205,24 @@ public static class BranchAndJoinPipes
    #endregion
 
    #region LEFT SEALED
-   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4>>> BranchThenJoin<T2, T3, T4>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
+   public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T3, T4>>> BranchThenJoin<T2, T3, T4>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                            Func<T2, T3> f1,
-                                                                                           Func<T2, T4> f2,
-                                                                                           bool parallel = false)
+                                                                                           Func<T2, T4> f2)
    {
-      return BranchThenJoin(input, new AsyncFunc<T2, T3>(f1), new AsyncFunc<T2, T4>(f2), parallel);
+      return BranchThenJoin(input, new AsyncFunc<T2, T3>(f1), new AsyncFunc<T2, T4>(f2));
    }
 
 
 
-   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4, T5>>> BranchThenJoin<T2, T3, T4, T5>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
+   public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T3, T4, T5>>> BranchThenJoin<T2, T3, T4, T5>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                            Func<T2, T3> f1,
                                                                                            Func<T2, T4> f2,
-                                                                                           Func<T2, T5> f3,
-                                                                                           bool parallel = false)
+                                                                                           Func<T2, T5> f3)
    {
       return BranchThenJoin(input,
                             new AsyncFunc<T2, T3>(f1),
                             new AsyncFunc<T2, T4>(f2),
-                            new AsyncFunc<T2, T5>(f3),
-                            parallel);
+                            new AsyncFunc<T2, T5>(f3));
    }
 
    public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4, T5, T6>>> BranchThenJoin<T2, T3, T4, T5, T6>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
@@ -326,21 +323,27 @@ public static class BranchAndJoinPipes
    }
 
 
-   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4>>> BranchThenJoin<T2, T3, T4>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
+   public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T3, T4>>> BranchThenJoin<T2, T3, T4>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                            AsyncFunc<T2, T3> f1,
-                                                                                           AsyncFunc<T2, T4> f2,
-                                                                                           bool parallel = false)
+                                                                                           AsyncFunc<T2, T4> f2)
    {
-      return input.Then(input => BranchThenJoin(input, f1, f2, parallel));
+      var t1 = input.Then(f1);
+      var t2 = input.Then(f2);
+      return Join(t1, t2);
    }
 
-   public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4, T5>>> BranchThenJoin<T2, T3, T4, T5>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
+   public static Pipeline_LeftSealed<DisposableTuple<T3, T4, T5>> BranchThenJoin<T2, T3, T4, T5>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                            AsyncFunc<T2, T3> f1,
                                                                                            AsyncFunc<T2, T4> f2,
-                                                                                           AsyncFunc<T2, T5> f3,
-                                                                                           bool parallel = false)
+                                                                                           AsyncFunc<T2, T5> f3)
    {
-      return input.Then(input => BranchThenJoin(input, f1, f2, f3, parallel));
+
+      var t1 = input.Then(f1);
+      var t2 = input.Then(f2);
+      var t3 = input.Then(f3);
+      var j  = Join(Join(t1, t2), t3);
+      return j.Then((a, b) => new DisposableTuple<T3, T4, T5>(a.Val1, a.Val2, b)).Pipeline;
+      
    }
 
    public static ThenResult<T2, Pipeline_LeftSealed<DisposableTuple<T3, T4, T5, T6>>> BranchThenJoin<T2, T3, T4, T5, T6>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
@@ -409,12 +412,7 @@ public static class BranchAndJoinPipes
       AsyncFunc<T1, byte> p = new(DoNothing);// placeholder
       var result = await BranchThenJoin(input, f1, f2, p, p, p, p, p, p, parallel);
 
-      return new()
-      {
-         Val1 = result.Val1,
-         Val2 = result.Val2
-      };
-
+      return new(result.Val1, result.Val2);
    }
 
    static async Task<DisposableTuple<T2, T3, T4>> BranchThenJoin<T1, T2, T3, T4>(T1 input, AsyncFunc<T1, T2> f1, AsyncFunc<T1, T3> f2, AsyncFunc<T1, T4> f3, bool parallel)
@@ -424,12 +422,9 @@ public static class BranchAndJoinPipes
       AsyncFunc<T1, byte> p = new(DoNothing);// placeholder
       var result = await BranchThenJoin(input, f1, f2, f3, p, p, p, p, p, parallel);
 
-      return new()
-      {
-         Val1 = result.Val1,
-         Val2 = result.Val2,
-         Val3 = result.Val3
-      };
+      return new(result.Val1,
+         result.Val2,
+         result.Val3);
 
    }
    static async Task<DisposableTuple<T2, T3, T4, T5>> BranchThenJoin<T1, T2, T3, T4, T5>(T1 input,
@@ -443,13 +438,10 @@ public static class BranchAndJoinPipes
       AsyncFunc<T1, byte> p = new(DoNothing);// placeholder
       var result = await BranchThenJoin(input, f1, f2, f3, f4, p, p, p, p, parallel);
 
-      return new()
-      {
-         Val1 = result.Val1,
-         Val2 = result.Val2,
-         Val3 = result.Val3,
-         Val4 = result.Val4
-      };
+      return new(result.Val1,
+         result.Val2,
+         result.Val3,
+         result.Val4);
 
    }
    static async Task<DisposableTuple<T2, T3, T4, T5, T6>> BranchThenJoin<T1, T2, T3, T4, T5, T6>(T1 input,
@@ -464,15 +456,12 @@ public static class BranchAndJoinPipes
       AsyncFunc<T1, byte> p = new(DoNothing);// placeholder
       var result = await BranchThenJoin(input, f1, f2, f3, f4, f5, p, p, p, parallel);
 
-      return new()
-      {
-         Val1 = result.Val1,
-         Val2 = result.Val2,
-         Val3 = result.Val3,
-         Val4 = result.Val4,
-         Val5 = result.Val5
-      };
-
+      return new(result.Val1,
+         result.Val2,
+         result.Val3,
+         result.Val4,
+         result.Val5);
+      
    }
 
    static async Task<DisposableTuple<T2, T3, T4, T5, T6, T7>> BranchThenJoin<T1, T2, T3, T4, T5, T6, T7>(T1 input,
@@ -488,16 +477,12 @@ public static class BranchAndJoinPipes
       AsyncFunc<T1, byte> p = new(DoNothing);// placeholder
       var result = await BranchThenJoin(input, f1, f2, f3, f4, f5, f6, p, p, parallel);
 
-      return new()
-      {
-         Val1 = result.Val1,
-         Val2 = result.Val2,
-         Val3 = result.Val3,
-         Val4 = result.Val4,
-         Val5 = result.Val5,
-         Val6 = result.Val6,
-      };
-
+      return new(result.Val1,
+         result.Val2,
+         result.Val3,
+         result.Val4,
+         result.Val5,
+         result.Val6);
    }
    static async Task<DisposableTuple<T2, T3, T4, T5, T6, T7, T8>> BranchThenJoin<T1, T2, T3, T4, T5, T6, T7, T8>(T1 input,
                                                                                                                  AsyncFunc<T1, T2> f1,
@@ -513,16 +498,13 @@ public static class BranchAndJoinPipes
 
       var result = await BranchThenJoin(input, f1, f2, f3, f4, f5, f6, f7, p, parallel);
 
-      return new()
-      {
-         Val1 = result.Val1,
-         Val2 = result.Val2,
-         Val3 = result.Val3,
-         Val4 = result.Val4,
-         Val5 = result.Val5,
-         Val6 = result.Val6,
-         Val7 = result.Val7,
-      };
+      return new(result.Val1,
+         result.Val2,
+         result.Val3,
+         result.Val4,
+         result.Val5,
+         result.Val6,
+         result.Val7);
 
    }
 
@@ -578,48 +560,175 @@ public static class BranchAndJoinPipes
          r8 = await f8.Invoke(input);
       }
 
-      return new()
-      {
-         Val1 = r1,
-         Val2 = r2,
-         Val3 = r3,
-         Val4 = r4,
-         Val5 = r5,
-         Val6 = r6,
-         Val7 = r7,
-         Val8 = r8,
-      };
+      return new(r1, r2, r3, r4, r5, r6, r7, r8);
    }
-   
-   
-   public static IAsPipeline<IPipeline_RightOpen<DisposableTuple<T1, T2>>> Join<T1, T2, TPipeline1>(this IAsPipeline<TPipeline1> f1,
-                                                                                                   Func<T1, T2> f2)
-      where TPipeline1 : IPipeline_RightOpen<T1>
-   {
-      Pipeline_Open<T1, T2> p = new AsyncFunc<T1, T2>(f2).AsPipeline;
 
-      return Join<T1,T2, TPipeline1, Pipeline_Open<T1,T2>>(f1, p);
+
+   //public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T1, T2>>> Join<T1, T2>(this IAsPipeline<Pipeline_LeftSealed<T1>> f1,
+   //                                                                                     Func<T1, T2> f2)
+   //{
+   //   // Method not strictly required, but helps compiler resolve types so
+   //   // generics don't need to be written explicitly
+   //   Pipeline_Open<T1, T2> p = new AsyncFunc<T1, T2>(f2).AsPipeline;
+
+   //   return Join<T1,T2, Pipeline_LeftSealed<T1>, Pipeline_Open<T1,T2>>(f1, p);
+   //}
+
+   //public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2>>> Join<TPipelineIn, T1, T2>(this IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f1,
+   //                                                                                                         Func<T1, T2> f2)
+   //{
+   //   Pipeline_Open<T1, T2> p = new AsyncFunc<T1, T2>(f2).AsPipeline;
+
+   //   return Join<T1,T2>(f1, p);
+   //}
+
+   #region Join with 2
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2>>> Join<TPipelineIn, T1, T2>(this IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f1,
+                                                                                                            IAsPipeline<Pipeline_Open<TPipelineIn, T2>> f2)
+   {
+      // Method not strictly required, but helps compiler resolve types so
+      // generics don't need to be written explicitly
+      return new Join_LeftOpen<TPipelineIn, T1, T2>(f1.AsPipeline, f2.AsPipeline.Last);
+   }
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2>>> Join<TPipelineIn, T1, T2>(this IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f1,
+                                                                                                            IAsPipeline<Pipeline_LeftSealed<T2>> f2)
+   {
+      // Method not strictly required, but helps compiler resolve types so
+      // generics don't need to be written explicitly
+      return new Join_LeftOpen<TPipelineIn, T1, T2>(f1.AsPipeline, f2.AsPipeline.Last);
+   }
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2>>> Join<TPipelineIn, T1, T2>(this IAsPipeline<Pipeline_LeftSealed<T1>> f1,
+                                                                                                            IAsPipeline<Pipeline_Open<TPipelineIn, T2>> f2)
+   {
+      // Method not strictly required, but helps compiler resolve types so
+      // generics don't need to be written explicitly
+      return new Join_LeftOpen<TPipelineIn, T1, T2>(f1.AsPipeline.Last, f2.AsPipeline);
+   }
+   public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T1, T2>>> Join<T1, T2>(this IAsPipeline<Pipeline_LeftSealed<T1>> f1,
+                                                                                             IAsPipeline<Pipeline_LeftSealed<T2>> f2)
+   {
+      // Method not strictly required, but helps compiler resolve types so
+      // generics don't need to be written explicitly
+      return Join<T1, T2, Pipeline_LeftSealed<T2>>(f1, f2);
    }
    
-   
-   public static IAsPipeline<IPipeline_RightOpen<DisposableTuple<T1, T2>>> Join<T1, T2, TPipeline1, TPipeline2>(this IAsPipeline<TPipeline1> f1,
+   public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T1, T2>>> Join<T1, T2, TPipeline2>(this IAsPipeline<Pipeline_LeftSealed<T1>> f1,
                                                                                                    IAsPipeline<TPipeline2> f2)
-      where TPipeline1 : IPipeline_RightOpen<T1>
       where TPipeline2 : IPipeline_RightOpen<T2>
    {
-      return new Join<T1, T2>(f1.AsPipeline.Last, f2.AsPipeline.Last);
-   }
-   public static ThenResult<DisposableTuple<T1, T2>, IPipeline_RightOpen<T3>> JoinThen<T1, T2, T3, TPipeline1, TPipeline2, TPipeline3>(this IAsPipeline<TPipeline1> f1,
-                                                                                                      IAsPipeline<TPipeline2> f2,
-                                                                                                      IAsPipeline<Pipeline_Open<DisposableTuple<T1, T2>, T3>> f3)
-      where TPipeline1 : IPipeline_RightOpen<T1>
+      return new Join_LeftSealed<T1, T2>(f1.AsPipeline, f2.AsPipeline.Last);
+   }   
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2>>> Join<TPipelineIn, T1, T2, TPipeline2>(this IAsPipeline<Pipeline_Open<TPipelineIn,T1>> f1,
+                                                                                                   IAsPipeline<TPipeline2> f2)
       where TPipeline2 : IPipeline_RightOpen<T2>
-      //where TPipeline3 : Pipeline_Open<DisposableTuple<T1,T2>, T3>
    {
-      return Join<T1, T2, TPipeline1, TPipeline2>(f1, f2).Then(f3);
+      return new Join_LeftOpen<TPipelineIn, T1, T2>(f1.AsPipeline, f2.AsPipeline.Last);
    }
    
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2>>> Join<TPipelineIn, T1, T2, TPipeline2>(this IAsPipeline<TPipeline2> f1,
+                                                                                                   IAsPipeline<Pipeline_Open<TPipelineIn, T2>> f2)
+      where TPipeline2 : IPipeline_RightOpen<T1>
+   {
+      return new Join_LeftOpen<TPipelineIn, T1, T2>(f1.AsPipeline.Last, f2.AsPipeline);
+   }
+   #endregion
+
+   #region Join with 3
+
+
+   private static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join3_Sub<TPipelineIn, T1, T2, T3>(Pipeline_Open<TPipelineIn, T1> pipelineOpen, IPipeOut<T2> out2, IPipeOut<T3> out3)
+   {
+      return new Join_LeftOpen_3<TPipelineIn, T1, T2, T3>(pipelineOpen, out2, out3);
+   }
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join<TPipelineIn, T1, T2, T3>(this IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f1,
+                                                                                                            IAsPipeline<Pipeline_Open<TPipelineIn, T2>> f2,
+                                                                                                            IAsPipeline<Pipeline_Open<TPipelineIn, T3>> f3)
+   {
+      // Exists to help compile identify generic args
+      return Join3_Sub(f1.AsPipeline, f2.AsPipeline.Last, f3.AsPipeline.Last);
+   }
+
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join<TPipelineIn, T1, T2, T3>(this IAsPipeline<Pipeline_LeftSealed<T2>> f1,
+                                                                                                            IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f2,
+                                                                                                            IAsPipeline<Pipeline_Open<TPipelineIn, T3>> f3)
+   {
+      // Exists to help compile identify generic args
+      return Join3_Sub(f2.AsPipeline, f1.AsPipeline.Last, f3.AsPipeline.Last);
+   }
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join<TPipelineIn, T1, T2, T3>(this IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f1,
+                                                                                                            IAsPipeline<Pipeline_LeftSealed<T2>> f2,
+                                                                                                            IAsPipeline<Pipeline_Open<TPipelineIn, T3>> f3)
+   {
+      // Exists to help compile identify generic args
+      return Join3_Sub(f1.AsPipeline, f2.AsPipeline.Last, f3.AsPipeline.Last);
+   }
    
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join<TPipelineIn, T1, T2, T3>(this IAsPipeline<Pipeline_LeftSealed<T3>> f1,
+                                                                                                            IAsPipeline<Pipeline_LeftSealed<T2>> f2,
+                                                                                                            IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f3)
+   {
+      // Exists to help compile identify generic args
+      return Join3_Sub(f3.AsPipeline, f2.AsPipeline.Last, f1.AsPipeline.Last);
+   }
+   
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join<TPipelineIn, T1, T2, T3>(this IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f1,
+                                                                                                                    IAsPipeline<Pipeline_Open<TPipelineIn, T2>> f2,
+                                                                                                                    IAsPipeline<Pipeline_LeftSealed<T3>> f3)
+   {
+      // Exists to help compile identify generic args
+      return Join<TPipelineIn, T1, T2, T3, Pipeline_Open<TPipelineIn, T2>, Pipeline_LeftSealed<T3>>(f1, f2, f3);
+   }
+   
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join<TPipelineIn, T1, T2, T3>(this IAsPipeline<Pipeline_LeftSealed<T3>> f1,
+                                                                                                                    IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f2,
+                                                                                                                    IAsPipeline<Pipeline_LeftSealed<T2>> f3)
+   {
+      // Exists to help compile identify generic args
+      return Join3_Sub(f2.AsPipeline, f3.AsPipeline.Last, f1.AsPipeline.Last);
+   }
+
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join<TPipelineIn, T1, T2, T3>(this IAsPipeline<Pipeline_Open<TPipelineIn, T1>> f1,
+                                                                                                                    IAsPipeline<Pipeline_LeftSealed<T2>> f2,
+                                                                                                                    IAsPipeline<Pipeline_LeftSealed<T3>> f3)
+   {
+      // Exists to help compile identify generic args
+      return Join<TPipelineIn, T1, T2, T3, Pipeline_LeftSealed<T2>, Pipeline_LeftSealed<T3>>(f1, f2, f3);
+   }
+   public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T1, T2, T3>>> Join<T1, T2, T3>(this IAsPipeline<Pipeline_LeftSealed<T1>> f1,
+                                                                                                                    IAsPipeline<Pipeline_LeftSealed<T2>> f2,
+                                                                                                                    IAsPipeline<Pipeline_LeftSealed<T3>> f3)
+   {
+      // Exists to help compile identify generic args
+      return Join<T1, T2, T3, Pipeline_LeftSealed<T2>, Pipeline_LeftSealed<T3>>(f1, f2, f3);
+   }
+
+   
+   public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T1, T2, T3>>> Join<T1, T2, T3, TPipeline2, TPipeline3>(this IAsPipeline<Pipeline_LeftSealed<T1>> f1,
+                                                                                                   IAsPipeline<TPipeline2> f2,
+                                                                                                   IAsPipeline<TPipeline3> f3)
+      where TPipeline2 : IPipeline_RightOpen<T2>
+      where TPipeline3 : IPipeline_RightOpen<T3>
+   {
+      return new Join_LeftSealed_3<T1, T2,T3>(f1.AsPipeline, f2.AsPipeline.Last, f3.AsPipeline.Last);
+   }   
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join<TPipelineIn, T1, T2, T3, TPipeline2, TPipeline3>(this IAsPipeline<Pipeline_Open<TPipelineIn,T1>> f1,
+                                                                                                   IAsPipeline<TPipeline2> f2,
+                                                                                                   IAsPipeline<TPipeline3> f3)
+      where TPipeline2 : IPipeline_RightOpen<T2>
+      where TPipeline3 : IPipeline_RightOpen<T3>
+   {
+      return Join3_Sub(f1.AsPipeline, f2.AsPipeline.Last, f3.AsPipeline.Last);
+   }
+   
+   public static IAsPipeline<Pipeline_Open<TPipelineIn, DisposableTuple<T1, T2, T3>>> Join<TPipelineIn, T1, T2, T3, TPipeline2, TPipeline3>(this IAsPipeline<TPipeline2> f1,
+                                                                                                   IAsPipeline<Pipeline_Open<TPipelineIn, T2>> f2,
+                                                                                                   IAsPipeline<TPipeline3> f3)
+      where TPipeline2 : IPipeline_RightOpen<T1>
+      where TPipeline3 : IPipeline_RightOpen<T3>
+   {
+      return new Join_LeftOpen_3<TPipelineIn, T1, T2, T3>(f1.AsPipeline.Last, f2.AsPipeline, f3.AsPipeline.Last);
+   }
+   #endregion
 
    static byte DoNothing<T>(T input) => default;
 }

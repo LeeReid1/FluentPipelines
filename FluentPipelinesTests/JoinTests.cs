@@ -3,33 +3,61 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace FluentPipelinesTests;
+
 [TestClass]
-public class JoinTests
+public class JoinTests : JoinTestsBase
 {
+   /// <summary>
+   /// Joins two ands
+   /// </summary>
+   /// <returns></returns>
    [TestMethod]
-   public async Task Join()
+   public async Task Join_2()
    {
-      const int input = 11;
-      int result = default;
       PushStartPipe<int> start = new();
+      var branch1 = start.Then(Add3);
+      var branch2 = branch1.And(MultiplyBy5);
+      var merge = branch1.Join(branch2);
 
-      ThenResult<int, Pipeline_LeftSealed<int>> branch1 = start.Then(Add3);
-      Pipeline_LeftSealed<int> branch2 = branch1.And(MultiplyBy5).Pipeline;
-      var merge = branch1.Join<int, int, Pipeline_LeftSealed<int>, Pipeline_LeftSealed<int>>(branch2);
+      await Join_2_Sub(start, merge.Then(Sum));
+   }
+   
+   
+   /// <summary>
+   /// Joins three ands
+   /// </summary>
+   /// <returns></returns>
+   [TestMethod]
+   public async Task Join_3()
+   {
+      PushStartPipe<int> start = new();
+      var branch1 = start.Then(Add3);
+      var branch2 = branch1.And(MultiplyBy5);
+      var branch3 = branch1.And(MultiplyBy7);
+      var merge = branch1.Join(branch2, branch3);
 
-      merge.Then(Sum, name:"Sum").Then(a=> result = a);
+      await Join_3_Sub(start, merge.Then(Sum3));
+   }
+   
 
-      await start.Run(input);
+   [TestMethod]
+   public async Task Join_Dispose()
+   {
+      static ThenResult<int, Pipeline_FullySealed> JoinAndMerge(PushStartPipe<int> start, Func<int, MockDisposable> Step1a, Func<int, MockDisposable> Step1b, Func<MockDisposable, MockDisposable, int> Step2, Action<int> Step3)
+      {
+         var branch1 = start.Then(Step1a);
+         var branch2 = start.Then(Step1b);
+         ThenResult<int, Pipeline_FullySealed> merge = branch1.Join(branch2).Then(Step2).Then(Step3);
+         return merge;
+      }
 
-      Assert.AreEqual((input + 3) + (input * 5), result);      
+      await base.Join_Dispose_Base(JoinAndMerge);
+
    }
 
-   static int Add3(int a) => a + 3;
-   static int MultiplyBy5(int a) => a * 5;
-
-   static int Sum(DisposableTuple<int,int> tup) => tup.Val1 + tup.Val2;
 }

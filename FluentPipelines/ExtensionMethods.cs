@@ -32,13 +32,25 @@ public static class ExtensionMethods
                                                                                                             string? name = null)
    {
       return Then(source, new AsyncAction<T2>(next, name));
-   }
-
+   } 
+   
 
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this IAsPipeline<Pipeline_Open<TPipelineInput, T2>> source,
                                                                                                IAsPipeline<Pipeline_RightSealed<T2>> next)
    {
       var src = source.AsPipeline;
+      var start = src.PipelineStart;
+      var joinFrom = src.Last;
+      var joinTo = next.AsPipeline.PipelineStart;
+
+
+      joinFrom.AddListener(joinTo);
+      return new(joinFrom, new Pipeline_RightSealed<TPipelineInput>(start));
+   }
+   public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this IPipeline_Open<TPipelineInput, T2> source,
+                                                                                               IAsPipeline<Pipeline_RightSealed<T2>> next)
+   {
+      var src = source;
       var start = src.PipelineStart;
       var joinFrom = src.Last;
       var joinTo = next.AsPipeline.PipelineStart;
@@ -96,6 +108,7 @@ public static class ExtensionMethods
       joinFrom.AddListener(joinTo);
       return new(joinFrom, new Pipeline_FullySealed(start));
    }
+
 
    #endregion
 
@@ -159,6 +172,30 @@ public static class ExtensionMethods
    }
 
    /// <summary>
+   /// Connects the result of a Join call to the next node
+   /// </summary>
+   /// <remarks>Wraps methods that do not take in a disposable tuple but take in the correct arguments individually</remarks>
+   public static ThenResult<DisposableTuple<TVal1, TVal2>, Pipeline_LeftSealed<TOut>> Then<TVal1, TVal2, TOut>(this IAsPipeline<Pipeline_LeftSealed<DisposableTuple<TVal1, TVal2>>> source,
+                                                                               Func<TVal1, TVal2, TOut> next,
+                                                                               string? name = null)
+   {
+      return Then(source, new AsyncFunc<DisposableTuple<TVal1, TVal2>, TOut>(tup => next(tup.Val1, tup.Val2), name));
+   }
+
+   
+   /// <summary>
+   /// Connects the result of a Join call to the next node
+   /// </summary>
+   /// <remarks>Wraps methods that do not take in a disposable tuple but take in the correct arguments individually</remarks>
+   public static ThenResult<DisposableTuple<TVal1, TVal2, TVal3>, Pipeline_LeftSealed<TOut>> Then<TVal1, TVal2, TVal3, TOut>(this IAsPipeline<Pipeline_LeftSealed<DisposableTuple<TVal1, TVal2, TVal3>>> source,
+                                                                               Func<TVal1, TVal2, TVal3, TOut> next,
+                                                                               string? name = null)
+   {
+      return Then(source, new AsyncFunc<DisposableTuple<TVal1, TVal2, TVal3>, TOut>(tup => next(tup.Val1, tup.Val2, tup.Val3), name));
+   }
+
+
+   /// <summary>
    /// Connects the result of this Then call to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> Then<T2, TOut>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
@@ -167,6 +204,8 @@ public static class ExtensionMethods
    {
       return Then(source, new AsyncFunc<T2,TOut>(next, name));
    }
+
+
 
 
 
