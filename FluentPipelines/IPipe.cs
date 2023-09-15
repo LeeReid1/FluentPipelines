@@ -1,7 +1,7 @@
 ﻿namespace FluentPipelines;
 
 
-public interface IPipe<TIn> : IPipelineComponent
+public interface IPipe<TIn> : IPipelineComponent, IPipe
 {
    Task Run(AutoDisposableValue<TIn> input, SharedExecutionSettings executionSettings);
 }

@@ -44,4 +44,6 @@ public sealed class StartPipe<TOut> : INoInputStartPipe, IAsPipeline<Pipeline_Le
    {
       yield return pipe;
    }
+
+   public Task AddOnErrorListener(INoInputStartPipe pipe) => pipe.AddOnErrorListener(pipe);
 }

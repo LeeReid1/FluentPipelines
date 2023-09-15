@@ -10,6 +10,7 @@ namespace FluentPipelines;
 internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
 {
    readonly List<IPipe<TOut>> subsequentPipes = new();
+   readonly List<INoInputStartPipe> onErrorPipes = new();
    readonly AsyncFunc<TIn, TOut> func;
    readonly SemaphoreSlim semaphore = new(1);
    public string Name => func.Name;
@@ -50,25 +51,52 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
 
       async Task Sub()
       {
-         PrintStatus("Running", Verbosity.Minimal);
          TIn val = input.Value;
-         TOut result = await func.Invoke(val);
+         (bool success, TOut? result) = await RunFunc(val).ConfigureAwait(false);
 
-         Cleanup(input, val, result);
+         CleanUp(input, success && InputIsOutput(val, result!));
 
-         PrintStatus("Completed", Verbosity.Normal);
-         await RunSubsequent(result, executionSettings, true);
+         if (success)
+         {
+            PrintStatus("Completed", Verbosity.Normal);
+            try
+            {
+               await RunSubsequent(result!, executionSettings, true).ConfigureAwait(false);
+            }
+            catch when (onErrorPipes.Count != 0)
+            {
+# warning todo: memory leaks due to exception
+               await RunOnError(executionSettings).ConfigureAwait(false);
+            }
+         }
+         else
+         {
+            await RunOnError(executionSettings).ConfigureAwait(false);
+         }
 
+         async Task<(bool, TOut?)> RunFunc(TIn val)
+         {
+            PrintStatus("Running", Verbosity.Minimal);
 
+            try
+            {
+
+               return (true, await func.Invoke(val).ConfigureAwait(false));
+            }
+            catch (Exception e) when (onErrorPipes.Count != 0)
+            {
+               PrintStatus("Error: " + e.ToString(), Verbosity.Minimal);
+
+               return (false, default);
+            }
+            // else allow a catastrophic fail
+         }
          //
          // Eagerly Disposes objects as required
          //
-         void Cleanup(AutoDisposableValue<TIn> input, TIn val, TOut result)
+         void CleanUp(AutoDisposableValue<TIn> input, bool outputIsInput)
          {
-            
-            
             PrintStatus("Cleaning Up", Verbosity.Verbose);
-            bool outputIsInput = InputIsOutput(val, result);
             if (outputIsInput)
             {
                // input was re-used as output
@@ -97,7 +125,6 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
                // clean up any object that is IDisposable
                input.UseComplete();
             }
-
          }
 
 
@@ -111,6 +138,13 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
       }
    }
 
+   private async Task RunOnError(SharedExecutionSettings executionSettings)
+   {
+      foreach (var item in onErrorPipes)
+      {
+         await item.Run(executionSettings);
+      }
+   }
 
    protected virtual bool InputIsOutput(TIn input, TOut output) => object.ReferenceEquals(input, output);
 
@@ -138,10 +172,30 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
             await item.Run(inputForSubsequent, executionSettings);
          }
       }
-
    }
 
+   
+
    Task IPipeOut<TOut>.AddListener(IPipe<TOut> pipe) => AsThreadsafe(() => subsequentPipes.Add(pipe));
+
+   public Task AddOnErrorListener(INoInputStartPipe pipe) => AsThreadsafe(() => AddOnErrorListener_NotThreadsafe(pipe));
+   private void AddOnErrorListener_NotThreadsafe(INoInputStartPipe pipe) => onErrorPipes.Add(pipe);
+   public Task AddOnErrorListenerToEntireTree(INoInputStartPipe pipe)
+   {
+      return AsThreadsafe(Sub);
+
+      async Task Sub()
+      {
+         AddOnErrorListener_NotThreadsafe(pipe); // need to use non-threadsafe to avoid a deadlock
+         foreach (var item in PipelineComponentMethods.GetTree(this).Cast<IPipe>())
+         {
+            if (item != this)
+            {
+               await item.AddOnErrorListener(pipe).ConfigureAwait(false);
+            }
+         }
+      }
+   }
 
    /// <summary>
    /// Runs an action in a threadsafe manner
@@ -196,4 +250,3 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
       }
    }
 }
-

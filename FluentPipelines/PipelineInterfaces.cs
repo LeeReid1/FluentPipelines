@@ -7,7 +7,7 @@ using static System.Net.Mime.MediaTypeNames;
 namespace FluentPipelines;
 
 
-public interface INoInputStartPipe
+public interface INoInputStartPipe : IPipe
 {
    Task Run(SharedExecutionSettings? executionSettings = null);
 }
