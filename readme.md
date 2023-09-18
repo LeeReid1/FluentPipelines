@@ -1,4 +1,4 @@
-# Fluent Pipelines
+﻿# Fluent Pipelines
 
 Lets you use existing C# code - for virtually anything - in the way you currently use LINQ with little or no adaptation. This is particularly helpful for building heavy or long typesafe data processing pipelines.
 
@@ -172,6 +172,20 @@ A.BranchThenJoin(B, C).Then(D);
      | -> B -> |
 A -> |         | --> D
      | -> C -> |
+
+```
+
+### SkipConnection
+`.SkipConnection()` which performs `Then`, and `Join` to the original input.
+
+`D`, here, receives the results of both A and B:
+
+```
+
+A.SkipConnection(B).Then(D);
+
+A -> | -> B -> |
+     |---------|--> D
 
 ```
 
@@ -580,3 +594,135 @@ getAnimals.Then(BadgerIdentifier.GetPrintCount())
 
 
 ```
+
+
+## Some Recipes
+
+
+### A Skipped Connection
+
+
+```
+A --> B-----> C
+|             ↑ 
+--------------|
+```
+
+Might be written:
+
+```csharp
+
+var StepA = new StartPipe(A).SkipConnection(B).Then(C);
+
+```
+
+Which is shorthand for
+
+```csharp
+
+var stepA = new StartPipe(A);
+var stepB = StepA.Then(B);
+var pipeline = stepA.Join(stepB).Then(C);
+
+```
+
+
+## Best practices with more complex code
+
+Fluent pipelines are best for code that branches minimally. When complex branching and merging occurs you may need to split pipeline building into several steps to maintain legibility.
+
+For example, lets say we have code that looks like the following (where letters are methods):
+
+```
+
+A --> B------------
+|         |       |
+|         V       V
+|         C ----> F
+|                 |
+|                 V
+|-------> D ----->E
+```
+
+Might be written:
+
+```csharp
+
+var StepA = new StartPipe(A);
+
+var BToF = StepA.Then(B).SkipConnection(C).Then(F);
+
+var StepD = StepA.Then(D).Join(BToF).Then(E);
+
+```
+
+Whlie this might seem let fluent than other examples, a pipeline like this is more likely to represent three stages:
+* A: Data I/O
+* B, C, F: Process the image
+* D: Ask where to save the image to
+* E: Save the image
+
+Best practice would always be to keep these branches apart, as we have done, which means more readable code:
+
+```csharp
+
+// Open the image
+var imageInput = new StartPipe(OpenImage);
+
+// Mask the face out
+var maskTheFace = ImageInput.Then(IdentifyFace)
+                            .SkipConnection(CreateMask)
+                            .Then(MaskFace);
+
+var fullPipeline = imageInput.Then(AskUserForSaveLocation)
+                             .Join(maskTheFace)
+                             .Then(SaveImage);
+
+
+await fullPipeline.Run();
+```
+
+### Reusing an object
+
+It's cleanest to make separate branches, rather than `And` when using a single object for many tasks. Always make sure the object is threadsafe before doing this!
+
+For example, if we want to create a `WebClient` and our pipeline will download many different items through this, then process each differently:
+
+```
+
+StartPipe<WebClient> getWebClient = new(()=>new WebClient());
+
+getWebClient.Then(GetA).Then(ProcessA).Then(Save);
+getWebClient.Then(GetB).Then(ProcessB).Then(Save);
+getWebClient.Then(GetC).Then(ProcessC).Then(Save);
+
+// Run any of these branches to execute everything
+await getWebClient.Run();
+
+```
+
+Alternatively, you can make methods or properties that return branches, then combine with `And`
+
+```
+
+[Then type] GetAndProcessA => new AsyncFunc(GetA).Then(ProcessA).Then(Save);
+[Then type] GetAndProcessB => new AsyncFunc(GetB).Then(ProcessB).Then(Save);
+[Then type] GetAndProcessC => new AsyncFunc(GetC).Then(ProcessB).Then(Save);
+
+
+Task GetAndProcessAll() => new StartPipe(new WebClient).
+                                Then(GetAndProcessA).
+                                And(GetAndProcessB).
+                                And(GetAndProcessC).
+                                Run();
+
+```
+
+## Disclaimer
+
+This library is built for my professional use with Musink music software, medical science, AI, and data science consulting. You're welcome to use, branch and extend it, so long as you stick within the license terms, but I cannot guarantee:
+* Backwards compatibility as I make changes
+* Timelines for specific updates
+* Help with debugging yourself.
+
+Where I have contributed to a product or service, the most restrictive license terms take precedence.

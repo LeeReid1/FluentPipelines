@@ -5,6 +5,33 @@ namespace FluentPipelinesTests;
 public abstract class JoinTestsBase
 {
    /// <summary>
+   /// Tests a join between two inputs, where A-->B-->C and A-->C
+   /// </summary>
+   /// <param name="start"></param>
+   /// <param name="pipeline">Should Add 3 to input and join to input</param>
+   /// <returns></returns>
+   protected static async Task SkipConnection(PushStartPipe<int> start, ThenResult<DisposableTuple<int, int>, Pipeline_LeftSealed<int>> pipeline)
+   {
+      int result = default;
+
+      // Set up
+      pipeline.Then(a => result = a);
+
+      // Run
+      int input = 11;
+      await start.Run(input);
+
+      Assert.AreEqual(input + 3 + input, result);
+
+      // Run again to make sure it's returning new values
+      result = 0;
+      input = 131;
+      await start.Run(input);
+
+      Assert.AreEqual((input + 3) + input, result);
+   }
+   
+   /// <summary>
    /// Tests a join between two inputs 
    /// </summary>
    /// <param name="start"></param>

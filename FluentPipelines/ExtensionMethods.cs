@@ -404,7 +404,7 @@ public static class ExtensionMethods
 
 
 
-
+   #region OnError
    #region LEFT-CLOSED, OPEN
 
 
@@ -478,7 +478,9 @@ public static class ExtensionMethods
       return new(joinFrom, pipelineEnd);
 
    }
+   #endregion
 
+   #region Open
    public static ThenResult<T2, Pipeline_Open<T1, TOut>> OnError<T1, T2, TOut>(this IAsPipeline<Pipeline_Open<T1, T2>> source,
                                                                           Func<TOut> next)
    {
@@ -498,7 +500,7 @@ public static class ExtensionMethods
       return new(joinFrom, pipelineEnd);
 
    }
-
+   #endregion
 
    #endregion
 }

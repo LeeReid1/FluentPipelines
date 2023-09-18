@@ -5,8 +5,56 @@ namespace FluentPipelinesTests;
 
 
 [TestClass]
+public class SkipConnectionTests : JoinTestsBase
+{
+   /// <summary>
+   /// Skip connection
+   /// </summary>
+   /// <returns></returns>
+   [TestMethod]
+   public async Task FromStart()
+   {
+      // A --> B ------
+      // |            |
+      // |            V
+      // ------------>C
+
+      // Set up
+      PushStartPipe<int> start = new();
+      await SkipConnection(start, start.SkipConnection(Add3).Then(Sum));
+   }
+   /// <summary>
+   /// Skip connection
+   /// </summary>
+   /// <returns></returns>
+   [TestMethod]
+   public async Task FromMidway()
+   {
+      // A --->B --> C ------
+      //       |            |
+      //       |            V
+      //       ------------>D
+
+      // Set up
+      int result = default;
+      PushStartPipe<int> start = new();
+      var pipeline = start.Then(MultiplyBy5).SkipConnection(Add3).Then(Sum).Then(a=>result = a);
+
+      await start.Run(11);
+      Assert.AreEqual(11 * 5 + 3 + 11 * 5, result);
+      
+      await start.Run(131);
+      Assert.AreEqual(131 * 5 + 3 + 131 * 5, result);
+   }
+
+}
+
+
+   [TestClass]
 public class BranchThenJoinTests : JoinTestsBase
 {
+
+   
    /// <summary>
    /// Joins two branches
    /// </summary>

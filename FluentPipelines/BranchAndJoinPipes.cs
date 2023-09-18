@@ -8,6 +8,7 @@ public static class BranchAndJoinPipes
 
    #region OPEN
 
+
    public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4>>> BranchThenJoin<T1, T2, T3, T4>(this IAsPipeline<Pipeline_Open<T1, T2>> input,
                                                                                                            Func<T2, T3> f1,
                                                                                                            Func<T2, T4> f2,
@@ -127,6 +128,8 @@ public static class BranchAndJoinPipes
    }
 
 
+
+   
    public static ThenResult<T2, Pipeline_Open<T1, DisposableTuple<T3, T4>>> BranchThenJoin<T1, T2, T3, T4>(this IAsPipeline<Pipeline_Open<T1, T2>> input,
                                                                                                            AsyncFunc<T2, T3> f1,
                                                                                                            AsyncFunc<T2, T4> f2,
@@ -205,6 +208,8 @@ public static class BranchAndJoinPipes
    #endregion
 
    #region LEFT SEALED
+
+   
    public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T3, T4>>> BranchThenJoin<T2, T3, T4>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                            Func<T2, T3> f1,
                                                                                            Func<T2, T4> f2)
@@ -405,6 +410,7 @@ public static class BranchAndJoinPipes
    }
 
    #endregion
+
 
    static async Task<DisposableTuple<T2, T3>> BranchThenJoin<T1, T2, T3>(T1 input, AsyncFunc<T1, T2> f1, AsyncFunc<T1, T3> f2, bool parallel)
    {
