@@ -3,7 +3,9 @@
 namespace FluentPipelines;
 public static class ExtensionMethods
 {
-
+   /// <summary>
+   /// Executes the full pipeline from its start point
+   /// </summary>
    public static Task Run<TPipeline>(this IAsPipeline<TPipeline> thenResult, SharedExecutionSettings? settings = null)
       where TPipeline : IPipeline_LeftSealed
    {
@@ -17,7 +19,7 @@ public static class ExtensionMethods
 
 
    /// <summary>
-   /// Connects the result of this Then call to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this IAsPipeline<Pipeline_Open<TPipelineInput, T2>> source,
                                                                                                             Func<T2, Task> next,
@@ -27,16 +29,18 @@ public static class ExtensionMethods
    }
 
    /// <summary>
-   /// Connects the result of this Then call to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this IAsPipeline<Pipeline_Open<TPipelineInput, T2>> source,
-                                                                                                            Action<T2> next,
+   Action<T2> next,
                                                                                                             string? name = null)
    {
       return Then(source, new AsyncAction<T2>(next, name));
    }
 
-
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this IAsPipeline<Pipeline_Open<TPipelineInput, T2>> source,
                                                                                                IAsPipeline<Pipeline_RightSealed<T2>> next)
    {
@@ -49,6 +53,9 @@ public static class ExtensionMethods
       joinFrom.AddListener(joinTo);
       return new(joinFrom, new Pipeline_RightSealed<TPipelineInput>(start));
    }
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> Then<TPipelineInput, T2>(this IPipeline_Open<TPipelineInput, T2> source,
                                                                                                IAsPipeline<Pipeline_RightSealed<T2>> next)
    {
@@ -67,7 +74,7 @@ public static class ExtensionMethods
    #region LEFT-CLOSED, CLOSED
 
    /// <summary>
-   /// Connects the result of this Then call to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                    Func<T2, Task> next)
@@ -76,7 +83,7 @@ public static class ExtensionMethods
    }
 
    /// <summary>
-   /// Connects the result of this Then call to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                    Action<T2> next)
@@ -85,7 +92,7 @@ public static class ExtensionMethods
    }
 
    /// <summary>
-   /// Connects the result of this Then call to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                    Action<T2> next,
@@ -96,7 +103,7 @@ public static class ExtensionMethods
 
 
    /// <summary>
-   /// Connects the result of this pipeline's output to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_FullySealed> Then<T2>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                IAsPipeline<Pipeline_RightSealed<T2>> next)
@@ -121,7 +128,7 @@ public static class ExtensionMethods
 
 
    /// <summary>
-   /// Connects the result of this pipeline's output to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> Then<TPipelineInput, T2, TOut>(this IAsPipeline<Pipeline_Open<TPipelineInput, T2>> source,
                                                                                                     Func<T2, Task<TOut>> next,
@@ -131,7 +138,7 @@ public static class ExtensionMethods
    }
 
    /// <summary>
-   /// Connects the result of this pipeline's output to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> Then<TPipelineInput, T2, TOut>(this IAsPipeline<Pipeline_Open<TPipelineInput, T2>> source,
                                                                                                     Func<T2, TOut> next,
@@ -141,30 +148,62 @@ public static class ExtensionMethods
    }
 
    /// <summary>
-   /// Connects the result of this pipeline's output to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> Then<TPipelineInput, T2, TOut>(this IAsPipeline<Pipeline_Open<TPipelineInput, T2>> source,
                                                                                                          IAsPipeline<Pipeline_Open<T2, TOut>> next)
    {
-      var src = source.AsPipeline;
+      return Then<Pipeline_Open<TPipelineInput, T2>, Pipeline_Open<T2, TOut>, TPipelineInput, T2, TOut>(source.AsPipeline, next.AsPipeline);
+   }
+   
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
+   public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> Then<TPipelineInput, T2, TOut>(this IAsPipeline<IPipeline_Open<TPipelineInput, T2>> source,
+                                                                                                         IAsPipeline<IPipeline_Open<T2, TOut>> next)
+   {
+      return Then<IPipeline_Open<TPipelineInput, T2>, IPipeline_Open<T2, TOut>, TPipelineInput, T2, TOut>(source.AsPipeline, next.AsPipeline);
+   }
+
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
+   public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> Thenn<TPipelineLeft, TPipelineRight, TPipelineInput, T2, TOut>(this IAsPipeline<TPipelineLeft> source,
+                                                                                                                                    IAsPipeline<TPipelineRight> next)
+      where TPipelineLeft : IPipeline_Open<TPipelineInput, T2>
+      where TPipelineRight : IPipeline_Open<T2, TOut>
+   {
+      return Then<IPipeline_Open<TPipelineInput, T2>, IPipeline_Open<T2, TOut>, TPipelineInput, T2, TOut>(source.AsPipeline, next.AsPipeline);
+   }
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
+   public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> Then<TPipelineLeft, TPipelineRight, TPipelineInput, T2, TOut>(this TPipelineLeft source, TPipelineRight next)
+      where TPipelineLeft : IPipeline_Open<TPipelineInput, T2>
+      where TPipelineRight : IPipeline_Open<T2, TOut>
+   {
+      var src = source;
       var start = src.PipelineStart;
       var joinFrom = src.Last;
-      var pipeline = next.AsPipeline;
+      var pipeline = next;
       var joinTo = pipeline.PipelineStart;
       var pipelineEnd = pipeline.Last;
 
       joinFrom.AddListener(joinTo);
       return new(joinFrom, new Pipeline_Open<TPipelineInput, TOut>(start, pipelineEnd));
-
    }
 
    #endregion
 
    #region LEFT-CLOSED, OPEN
 
-
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
    public static ThenResult<TOut, Pipeline_LeftSealed<TNext>> Then<TOut, TNext>(this Func<TOut> first, Func<TOut, TNext> next, string? name = null) => new StartPipe<TOut>(first).Then(next, name);
-
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> Then<T2, TOut>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                                Func<T2, Task<TOut>> next,
                                                                                string? name = null)
@@ -199,7 +238,7 @@ public static class ExtensionMethods
 
 
    /// <summary>
-   /// Connects the result of this Then call to the next node
+   /// Connects the result of this previous function to the next node
    /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> Then<T2, TOut>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                                Func<T2, TOut> next,
@@ -211,7 +250,9 @@ public static class ExtensionMethods
 
 
 
-
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> Then<T2, TOut>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                           IAsPipeline<Pipeline_Open<T2, TOut>> next)
    {
@@ -227,20 +268,27 @@ public static class ExtensionMethods
 
    }
 
-
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
    public static ThenResult<T2, IPipeline_RightOpen<TOut>> Then<T2, TOut>(this IAsPipeline<IPipeline_RightOpen<T2>> source,
                                                                                Func<T2, Task<TOut>> next,
                                                                                string? name = null)
    {
       return Then(source, new AsyncFunc<T2, TOut>(next, name));
    }
-
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
    public static ThenResult<T2, IPipeline_RightOpen<TOut>> Then<T2, TOut>(this IAsPipeline<IPipeline_RightOpen<T2>> source,
                                                                                Func<T2, TOut> next,
                                                                                string? name = null)
    {
       return Then(source, new AsyncFunc<T2, TOut>(next, name));
    }
+   /// <summary>
+   /// Connects the result of this previous function to the next node
+   /// </summary>
    public static ThenResult<T2, IPipeline_RightOpen<TOut>> Then<T2, TOut>(this IAsPipeline<IPipeline_RightOpen<T2>> source,
                                                                           IAsPipeline<Pipeline_Open<T2, TOut>> next)
    {
@@ -264,7 +312,7 @@ public static class ExtensionMethods
 
    #region OPEN, OPEN
    /// <summary>
-   /// Connects the result of this Then call to the next node
+   /// Connects the input from the last Then() to another function
    /// </summary>
    public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> And<TPipelineInput, T2, TOut>(this ThenResult<T2, Pipeline_Open<TPipelineInput, T2>> thenSource,
                                                                                                    Func<T2, TOut> next,
@@ -273,7 +321,9 @@ public static class ExtensionMethods
       return And(thenSource, new AsyncFunc<T2, TOut>(next, name));
    }
 
-
+   /// <summary>
+   /// Connects the input from the last Then() to another function
+   /// </summary>
    public static ThenResult<T2, Pipeline_Open<TPipelineInput, TOut>> And<TPipelineInput, T2, TOut>(this ThenResult<T2, Pipeline_Open<TPipelineInput, T2>> thenSource,
                                                                                                  IAsPipeline<Pipeline_Open<T2, TOut>> next)
    {
@@ -290,9 +340,8 @@ public static class ExtensionMethods
 
 
    /// <summary>
-   /// Connects the result of this And call to the next node
+   /// Connects the input from the last Then() to another function
    /// </summary>
-
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> And<T2, TPipeline, TOut>(this ThenResult<T2, TPipeline> source,
                                                                                          Func<T2, Task<TOut>> next,
                                                                                          string? name = null)
@@ -302,9 +351,8 @@ public static class ExtensionMethods
    }
 
    /// <summary>
-   /// Connects the result of this And call to the next node
+   /// Connects the input from the last Then() to another function
    /// </summary>
-
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> And<T2, TPipeline, TOut>(this ThenResult<T2, TPipeline> source,
                                                                                           Func<T2, TOut> next,
                                                                                           string? name = null)
@@ -313,6 +361,9 @@ public static class ExtensionMethods
       return And(source, new AsyncFunc<T2, TOut>(next, name));
    }
 
+   /// <summary>
+   /// Connects the input from the last Then() to another function
+   /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> And<T2, TPipeline, TOut>(this ThenResult<T2, TPipeline> source,
                                                                                   IAsPipeline<Pipeline_Open<T2, TOut>> next)
       where TPipeline : IPipeline_LeftSealed
@@ -328,7 +379,7 @@ public static class ExtensionMethods
 
    #region LEFT-OPEN, CLOSED
    /// <summary>
-   /// Connects the result of this And call to the next node
+   /// Connects the input from the last Then() to another function
    /// </summary>
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> And<TPipelineInput, TPipeline, T2>(this ThenResult<T2, TPipeline> source,
                                                                                                             Action<T2> next,
@@ -339,7 +390,7 @@ public static class ExtensionMethods
    }
 
    /// <summary>
-   /// Connects the result of this And call to the next node
+   /// Connects the input from the last Then() to another function
    /// </summary>
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> And<TPipelineInput, TPipeline, T2>(this ThenResult<T2, TPipeline> source,
                                                                                                            Func<T2, Task> next,
@@ -348,7 +399,9 @@ public static class ExtensionMethods
    {
       return And<TPipelineInput, TPipeline, T2>(source, new AsyncAction<T2>(next, name));
    }
-
+   /// <summary>
+   /// Connects the input from the last Then() to another function
+   /// </summary>
    public static ThenResult<T2, Pipeline_RightSealed<TPipelineInput>> And<TPipelineInput, TPipeline, T2>(this ThenResult<T2, TPipeline> source,
                                                                                                        IAsPipeline<Pipeline_RightSealed<T2>> next)
    where TPipeline : IPipeline_LeftOpen<TPipelineInput>
@@ -360,7 +413,7 @@ public static class ExtensionMethods
 
    #region LEFT-CLOSED, CLOSED
    /// <summary>
-   /// Connects the result of this And call to the next node
+   /// Connects the input from the last Then() to another function
    /// </summary>
    public static ThenResult<T2, Pipeline_FullySealed> And<T2, TPipeline>(this ThenResult<T2, TPipeline> source,
                                                                          Action<T2> next,
@@ -369,9 +422,8 @@ public static class ExtensionMethods
    {
       return And(source, new AsyncAction<T2>(next, name));
    }
-
    /// <summary>
-   /// Connects the result of this And call to the next node
+   /// Connects the input from the last Then() to another function
    /// </summary>
    public static ThenResult<T2, Pipeline_FullySealed> And<T2, TPipeline>(this ThenResult<T2, TPipeline> source,
                                                                          Func<T2, Task> next,
@@ -380,7 +432,9 @@ public static class ExtensionMethods
    {
       return And(source, new AsyncAction<T2>(next, name));
    }
-
+   /// <summary>
+   /// Connects the input from the last Then() to another function
+   /// </summary>
    public static ThenResult<T2, Pipeline_FullySealed> And<T2, TPipeline>(this ThenResult<T2, TPipeline> source,
                                                                               IAsPipeline<Pipeline_RightSealed<T2>> next)
       where TPipeline : IPipeline_LeftSealed
@@ -389,8 +443,9 @@ public static class ExtensionMethods
    }
 
    #endregion
-
-
+   /// <summary>
+   /// Connects the input from the last Then() to another function
+   /// </summary>
    private static ThenResult<T2, TPipeline> And_Sub<T2, TPipeline, TThenPipeline>(ThenResult<T2, TThenPipeline> source,
                                                                                   IPipeline_LeftOpen<T2> next,
                                                                                   TPipeline p)
@@ -407,22 +462,28 @@ public static class ExtensionMethods
    #region OnError
    #region LEFT-CLOSED, OPEN
 
-
+   /// <summary>
+   /// Called when this node or child nodes throws an uncaught exception 
+   /// </summary>
    public static ThenResult<TOut, Pipeline_LeftSealed<TNext>> OnError<TOut, TNext>(this Func<TOut> first, Func<Task<TNext>> next, string? name = null) => new StartPipe<TOut>(first).OnError(next, name);
+   /// <summary>
+   /// Called when this node or child nodes throws an uncaught exception 
+   /// </summary>
    public static ThenResult<TOut, Pipeline_LeftSealed<TNext>> OnError<TOut, TNext>(this Func<TOut> first, Func<TNext> next, string? name = null) => new StartPipe<TOut>(first).OnError(next, name);
 
+   /// <summary>
+   /// Called when this node or child nodes throws an uncaught exception 
+   /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> OnError<T2, TOut>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                                Func<Task<TOut>> next,
                                                                                string? name = null)
    {
-
       return OnError(source, new StartPipe<TOut>(next, name));
-
    }
 
 
    /// <summary>
-   /// Called when this node throws an exception 
+   /// Called when this node or child nodes throws an uncaught exception 
    /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> OnError<T2, TOut>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                                Func<TOut> next,
@@ -434,7 +495,9 @@ public static class ExtensionMethods
 
 
 
-
+   /// <summary>
+   /// Called when this node or child nodes throws an uncaught exception 
+   /// </summary>
    public static ThenResult<T2, Pipeline_LeftSealed<TOut>> OnError<T2, TOut>(this IAsPipeline<Pipeline_LeftSealed<T2>> source,
                                                                           IAsPipeline<Pipeline_LeftSealed<TOut>> next)
    {
@@ -450,7 +513,9 @@ public static class ExtensionMethods
 
    }
 
-
+   /// <summary>
+   /// Called when this node or child nodes throws an uncaught exception 
+   /// </summary>
    public static ThenResult<T2, IPipeline_RightOpen<TOut>> OnError<T2, TOut>(this IAsPipeline<IPipeline_RightOpen<T2>> source,
                                                                                Func<Task<TOut>> next,
                                                                                string? name = null)
@@ -458,12 +523,19 @@ public static class ExtensionMethods
       return OnError(source, new StartPipe<TOut>(next, name));
    }
 
+   /// <summary>
+   /// Called when this node or child nodes throws an uncaught exception 
+   /// </summary>
    public static ThenResult<T2, IPipeline_RightOpen<TOut>> OnError<T2, TOut>(this IAsPipeline<IPipeline_RightOpen<T2>> source,
                                                                                Func<TOut> next,
                                                                                string? name = null)
    {
       return OnError(source, new StartPipe<TOut>(next, name));
    }
+
+   /// <summary>
+   /// Called when this node or child nodes throws an uncaught exception 
+   /// </summary>
    public static ThenResult<T2, IPipeline_RightOpen<TOut>> OnError<T2, TOut>(this IAsPipeline<IPipeline_RightOpen<T2>> source,
                                                                           IAsPipeline<Pipeline_LeftSealed<TOut>> next)
    {
@@ -481,11 +553,17 @@ public static class ExtensionMethods
    #endregion
 
    #region Open
+   /// <summary>
+   /// Called when this node or child nodes throws an uncaught exception 
+   /// </summary>
    public static ThenResult<T2, Pipeline_Open<T1, TOut>> OnError<T1, T2, TOut>(this IAsPipeline<Pipeline_Open<T1, T2>> source,
                                                                           Func<TOut> next)
    {
       return OnError(source, new StartPipe<TOut>(next));
    }
+   /// <summary>
+   /// Called when this node or child nodes throws an uncaught exception 
+   /// </summary>
    public static ThenResult<T2, Pipeline_Open<T1, TOut>> OnError<T1, T2, TOut>(this IAsPipeline<Pipeline_Open<T1, T2>> source,
                                                                        IAsPipeline<Pipeline_LeftSealed<TOut>> next)
    {

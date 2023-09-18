@@ -18,6 +18,7 @@ public class AsyncAction<TIn> : IAsPipeline<Pipeline_RightSealed<TIn>>
       this.func = f;
       Name = nameOverride ?? f.Method.Name;
    }
+
    public AsyncAction(Action<TIn> f, string? nameOverride = null)
    {
       this.func = input =>
@@ -28,6 +29,11 @@ public class AsyncAction<TIn> : IAsPipeline<Pipeline_RightSealed<TIn>>
       Name = nameOverride ?? f.Method.Name;
    }
 
+   [Obsolete("Do not consume Task objects. Do you have an issue with earlier Then or And call?")]
+   public AsyncAction(Action<Task> f, string? nameOverride = null)
+   {
+      throw new NotSupportedException("Consuming task is not supported as it likely indicates an issue with an earlier call to Then, And, or similar");
+   }
    public Task Invoke(TIn input) => func.Invoke(input);
 
    public IPipe<TIn> ToPipe()

@@ -1,16 +1,7 @@
 ﻿namespace FluentPipelines;
 
 /// <summary>
-/// Can be converted or used as a pipeline
-/// </summary>
-/// <typeparam name="T"></typeparam>
-public interface IAsPipeline<T>
-{
-   T AsPipeline { get; }
-}
-
-/// <summary>
-/// 
+/// Results from a node linking function such as Then. Not intended to be used exept for other node linking functions
 /// </summary>
 /// <typeparam name="TThenSource">The pipe that was fed into Then</typeparam>
 /// <typeparam name="TFullPipeline">The result of Then which can be chained with another Then or similar operation</typeparam>

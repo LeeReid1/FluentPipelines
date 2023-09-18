@@ -6,12 +6,6 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace FluentPipelines;
 
-
-public interface INoInputStartPipe : IPipe
-{
-   Task Run(SharedExecutionSettings? executionSettings = null);
-}
-
 /// <summary>
 /// A pipeline that does not offer a way to connect the left to another pipeline's end
 /// </summary>
@@ -19,8 +13,6 @@ public interface INoInputStartPipe : IPipe
 public interface IPipeline_LeftSealed
 {
    INoInputStartPipe PipelineStart { get; }
-
-
 
 }
 
@@ -69,5 +61,10 @@ public interface IPipeline_Open<TPipelineInput, TOut> : IPipeline_LeftOpen<TPipe
    /// <summary>
    /// Then
    /// </summary>
-   public static ThenResult<TOut, Pipeline_RightSealed<TPipelineInput>> operator  >> (IPipeline_Open<TPipelineInput, TOut> lvalue, IAsPipeline<Pipeline_RightSealed<TOut>> rvalue) => ExtensionMethods.Then(lvalue,rvalue);
+   public static ThenResult<TOut, Pipeline_RightSealed<TPipelineInput>> operator  >> (IPipeline_Open<TPipelineInput, TOut> lvalue, IAsPipeline<Pipeline_RightSealed<TOut>> rvalue) => ExtensionMethods.Then(lvalue,rvalue);   
+
+   /// <summary>
+   /// Then
+   /// </summary>
+   public static ThenResult<TOut, Pipeline_Open<TPipelineInput, TOut>> operator  >> (IPipeline_Open<TPipelineInput, TOut> lvalue, IAsPipeline<Pipeline_Open<TOut, TOut>> rvalue) => ExtensionMethods.Then<IPipeline_Open<TPipelineInput, TOut>,Pipeline_Open<TOut, TOut>, TPipelineInput, TOut, TOut>(lvalue, rvalue.AsPipeline);
 }

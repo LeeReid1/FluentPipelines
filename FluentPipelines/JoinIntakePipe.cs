@@ -17,11 +17,10 @@ class JoinIntakePipe<T> : Pipe<T, T>
 
    protected override IEnumerable<IPipelineComponent> GetImmediateDownstreamComponents()
    {
-      List<IPipelineComponent> l = new(base.GetImmediateDownstreamComponents())
+      return new List<IPipelineComponent>(base.GetImmediateDownstreamComponents())
          {
             _parent
          };
-      return l;
    }
 
    protected override async Task RunSubsequent(T res, SharedExecutionSettings executionSettings, bool disposeInput)

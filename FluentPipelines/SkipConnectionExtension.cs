@@ -1,8 +1,13 @@
-﻿namespace FluentPipelines;
+﻿using System.Net.Http.Headers;
+
+namespace FluentPipelines;
 
 public static class SkipConnectionExtension
 {
    #region OPEN
+   /// <summary>
+   /// Provides input to the function, then returns the input and the function together
+   /// </summary>
    public static IAsPipeline<Pipeline_Open<T1, DisposableTuple<T2, T3>>> SkipConnection<T1, T2, T3>(this IAsPipeline<Pipeline_Open<T1, T2>> input,
                                                                                                         Func<T2, T3> f1,
                                                                                                         bool parallel = false)
@@ -12,6 +17,9 @@ public static class SkipConnectionExtension
                             parallel);
    }
 
+   /// <summary>
+   /// Provides input to the function, then returns the input and the function together
+   /// </summary>
    public static IAsPipeline<Pipeline_Open<T1, DisposableTuple<T2, T3>>> SkipConnection<T1, T2, T3>(this IAsPipeline<Pipeline_Open<T1, T2>> input,
                                                                                                         AsyncFunc<T2, T3> f1,
                                                                                                         bool parallel = false)
@@ -23,7 +31,9 @@ public static class SkipConnectionExtension
    #endregion
 
    #region LEFT SEALED
-
+   /// <summary>
+   /// Provides input to the function, then returns the input and the function together
+   /// </summary>
    public static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T2, T3>>> SkipConnection<T2, T3>(this IAsPipeline<Pipeline_LeftSealed<T2>> input,
                                                                                         Func<T2, T3> f1)
    {
@@ -42,13 +52,5 @@ public static class SkipConnectionExtension
    }
 
    #endregion
-
-   static IAsPipeline<Pipeline_LeftSealed<DisposableTuple<T1, T2>>> SkipConnection<T1, T2>(T1 input, AsyncFunc<T1, T2> f1, bool parallel)
-   {
-
-      var t1 = new StartPipe<T1>(input);
-      var t2 = t1.Then(f1);
-      return t1.Join(t2);
-   }
 
 }

@@ -3,7 +3,7 @@ using FluentPipelines;
 namespace PipelinesTests;
 
 [TestClass]
-public class UnitTest1
+public class SimpleTests
 {
    [TestMethod]
    public async Task SimpleLinear()
@@ -29,30 +29,6 @@ public class UnitTest1
       Assert.AreEqual(41 * 2 + 7, pipelineResult);
    }
    
-   
-   [TestMethod]
-   public async Task SimpleLinearWithPipes()
-   {
-      int startVal = 11;
-      int pipelineResult = 0;
-      StartPipe<int> start = new(() => startVal);
-
-      var pipeline = start | Double | Add3 | Save;
-
-
-      startVal = 11;
-      await start.Run();
-
-      Assert.AreEqual(11 * 2 + 3, pipelineResult);
-
-      startVal = 41;
-      await start.Run();
-      Assert.AreEqual(41 * 2 + 3, pipelineResult);
-
-      void Save(int result) => pipelineResult = result;
-      static int Double(int a) => a * 2;
-      static int Add3(int a) => a + 3;
-   }
 
    [TestMethod]
    public async Task TwoResults()

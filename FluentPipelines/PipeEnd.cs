@@ -34,9 +34,4 @@ internal class PipeEnd<TIn> : Pipe<TIn, object>
    {
       
    }
-
-   static AsyncFunc<TIn, object> ToAsyncFunc(Func<TIn, Task> finalAct, string name)
-   {
-      return new AsyncFunc<TIn, object>(async tuple=> { await finalAct.Invoke(tuple); return new object(); }, name);
-   }
 }

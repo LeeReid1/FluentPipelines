@@ -17,8 +17,6 @@ internal abstract class Join_Base<TIn1, TIn2> : IPipelineComponent
    protected TIn1? value1;
    protected TIn2? value2;
 
-
-
    protected Join_Base(IPipeOut<TIn1> input1, IPipeOut<TIn2> input2, int noInputs)
    {
       intakeReady = new bool[noInputs];
@@ -28,7 +26,6 @@ internal abstract class Join_Base<TIn1, TIn2> : IPipelineComponent
       input1.AddListener(p1);
       input2.AddListener(p2);
    }
-
 
    protected async Task OnInput<T>(T val, int intakeIndex, Action<T> setValue, SharedExecutionSettings settings)
    {

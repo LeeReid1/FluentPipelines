@@ -12,9 +12,7 @@ internal abstract class Join3<TIn1, TIn2, TIn3> : Join_Base<TIn1, TIn2>
    
    public Join3(IPipeOut<TIn1> input1, IPipeOut<TIn2> input2, IPipeOut<TIn3> input3) : base(input1, input2, 3)
    {
-
       p3 = new(this, OnInput3);
-
       input3.AddListener(p3);
    }
 

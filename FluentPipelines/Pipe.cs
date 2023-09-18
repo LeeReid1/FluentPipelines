@@ -65,7 +65,6 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
             }
             catch when (onErrorPipes.Count != 0)
             {
-# warning todo: memory leaks due to exception
                await RunOnError(executionSettings).ConfigureAwait(false);
             }
          }
@@ -89,7 +88,7 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
 
                return (false, default);
             }
-            // else allow a catastrophic fail
+            // else allow the Exception to propogate beyond here
          }
          //
          // Eagerly Disposes objects as required
@@ -237,8 +236,6 @@ internal class Pipe<TIn, TOut> : IPipe<TIn,TOut>
    public static implicit operator Pipe<TIn, TOut>(Func<TIn, Task<TOut>> func) => new(func); // DO NOT REVERSE ORDER OF THESE TWO OPERATORS OR TOUT CAN BECOME TASK
    public static implicit operator Pipe<TIn, TOut>(Func<TIn, TOut> func) => new(func); // DO NOT REVERSE ORDER OF THESE TWO OPERATORS OR TOUT CAN BECOME TASK
 
-
-   
 
    IEnumerable<IPipelineComponent> IPipelineComponent.GetImmediateDownstreamComponents() => this.GetImmediateDownstreamComponents();
 

@@ -21,14 +21,14 @@ public class AutoDisposableValue<T> : IDisposable
    /// <summary>
    /// True if this takes more than one call to <see cref="UseComplete"/> to be disposed
    /// </summary>
-   public bool IsShared => disposeAfter > 1;
+   internal bool IsShared => disposeAfter > 1;
 
    /// <summary>
    /// Creates a new <see cref="AutoDisposableValue{T}"/>
    /// </summary>
    /// <param name="disposeAfter">This self-disposes once <see cref="UseComplete"/> has been called this many times</param>
    /// <param name="value">The value, which may be disposable</param>
-   public AutoDisposableValue(int disposeAfter, T value)
+   internal AutoDisposableValue(int disposeAfter, T value)
    {
       this.disposeAfter = disposeAfter;
       _value = value;

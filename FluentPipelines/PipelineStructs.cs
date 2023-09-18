@@ -10,8 +10,6 @@ public readonly record struct Pipeline_Open<T1, T3>(IPipe<T1> PipelineStart, IPi
 
    Pipeline_Open<T1, T3> IAsPipeline<Pipeline_Open<T1, T3>>.AsPipeline => this;
    IPipeline_Open<T1, T3> IAsPipeline<IPipeline_Open<T1, T3>>.AsPipeline => this;
-
-   
 }
 
 /// <summary>

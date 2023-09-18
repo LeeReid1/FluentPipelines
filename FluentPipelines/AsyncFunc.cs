@@ -8,7 +8,6 @@ public sealed class AsyncFunc<TIn,TOut> : IAsPipeline<Pipeline_Open<TIn, TOut>>
    readonly Func<TIn, Task<TOut>> func;
    public string Name { get; }
 
-
    Pipeline_Open<TIn, TOut>? _asPipeline;
    public Pipeline_Open<TIn, TOut> AsPipeline
    {
@@ -26,7 +25,7 @@ public sealed class AsyncFunc<TIn,TOut> : IAsPipeline<Pipeline_Open<TIn, TOut>>
       Name = nameOverride ?? func.Method.Name;
    }
 
-   [Obsolete("Input must return a value")]
+   [Obsolete("Input must return a value that is not a vanilla Task. Do you have an issue with an earlier Then or And call?")]
    public AsyncFunc(Func<TIn, Task> func)
    {
       throw new NotSupportedException("Input must return a value");
