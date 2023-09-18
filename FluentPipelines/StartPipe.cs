@@ -1,4 +1,8 @@
-﻿namespace FluentPipelines;
+﻿using System.IO.Pipes;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+
+namespace FluentPipelines;
 
 /// <summary>
 /// Begins a pipeline using either a pre-known input, or a preknown input-calculating function
@@ -46,4 +50,8 @@ public sealed class StartPipe<TOut> : INoInputStartPipe, IAsPipeline<Pipeline_Le
    }
 
    public Task AddOnErrorListener(INoInputStartPipe pipe) => pipe.AddOnErrorListener(pipe);
+
+
+
+   public static ThenResult<TOut, Pipeline_FullySealed> operator >>(StartPipe<TOut> value, AsyncAction<TOut> shiftAmount) => value.Then(shiftAmount);
 }

@@ -44,8 +44,6 @@ async Task CountWordsInSite()
    string message = $"There were {numberOfWords} words";
 
    Console.WriteLine(message);
-
-
 }
 
 
@@ -64,32 +62,12 @@ start.Then(DownloadString)
 	 .Then(SplitIntoWords)
 	 .Then(CountWords)
 	 .Then(numberOfWords => $"There were {numberOfWords} words")
-	 .Then(Console.WriteLine);
+	 .Then(Console.WriteLine)
+     .Run();
 
-
-// Run the pipeline
-await start.Run();
 
 static string[] SplitIntoWords(string s) => s.Split(' ');
 
-
-```
-
-or even
-
-```csharp
-
-StartPipe<string> start = new(AskUserForWebsite);
-
-start | DownloadString
-      | SplitIntoWords
-      | CountWords
-      | numberOfWords => $"There were {numberOfWords} words"
-      | Console.WriteLine;
-
-
-// Run the pipeline
-await start.Run();
 ```
 
 ## Primary Operations
@@ -723,6 +701,6 @@ Task GetAndProcessAll() => new StartPipe(new WebClient).
 This library is built for my professional use with Musink music software, medical science, AI, and data science consulting. You're welcome to use, branch and extend it, so long as you stick within the license terms, but I cannot guarantee:
 * Backwards compatibility as I make changes
 * Timelines for specific updates
-* Help with debugging yourself.
+* Help with debugging.
 
 Where I have contributed to a product or service, the most restrictive license terms take precedence.
