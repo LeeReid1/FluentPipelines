@@ -698,7 +698,7 @@ Task GetAndProcessAll() => new StartPipe(new WebClient).
 
 ## Disclaimer
 
-This library is built for my professional use with Musink music software, medical science, AI, and data science consulting. You're welcome to use, branch and extend it, so long as you stick within the license terms, but I cannot guarantee:
+This library is built for my professional use with [Musink music software](https://musink.net), medical science, AI, and data science consulting. You're welcome to use, branch and extend it, so long as you stick within the license terms, but I cannot guarantee:
 * Backwards compatibility as I make changes
 * Timelines for specific updates
 * Help with debugging.
