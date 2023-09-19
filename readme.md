@@ -19,8 +19,6 @@ Consider the following code, designed to ask for a webpage, download it, and cou
 Normally, this may look like:
 
 ```csharp
-
-
 static async Task<string> DownloadString(string site)
 {
    using WebClient client = new();
@@ -33,7 +31,7 @@ static async Task<string> AskUserForWebsite() => ... // TODO: Prompt the user to
 
 async Task CountWordsInSite()
 {
-   string website = async AskUserForWebsite().ConfigureAwait(false);
+   string website = await AskUserForWebsite().ConfigureAwait(false);
 
    string websiteContent = await DownloadString(website).ConfigureAwait(false);
 
@@ -81,7 +79,7 @@ In the following example, let `A`,`B`,`C`,`D` be methods, `Func<T,S>` objects, `
 
 Begin by calling `AsPipelineInput()` from any value to begin a pipeline.
 
-```
+```csharp
 
 "input into the pipeline".AsPipelineInput()
 
@@ -120,21 +118,21 @@ start.Run("This sentence is the input to the pipeline");
 ### Then
 `.Then()` passes the `return` value of the previous function to the next function
 
-```
-
+```csharp
 A.Then(B);
-
+```
+```
 A -> B
 ```
 
 ### And
 `.And()` which passes the input of the last then call to the next function, effectively branching a pipeline
 
-```
-
+```csharp
 A.Then(B)
  .And(C);
-
+```
+```
 A
 | -> B
 | -> C
@@ -143,11 +141,10 @@ A
 ### Join
 `.Join()` which collects `return` values from branches and feeds them all into one function
 
-```
-
+```csharp
 B.Join(C).Then(D);
-
-
+```
+```
 B -> |
      | --> D
 C -> |
@@ -156,10 +153,10 @@ C -> |
 ### BranchAndJoin
 `.BranchAndJoin()` which performs `Then`, `And`, and `Join`
 
-```
-
+```csharp
 A.BranchThenJoin(B, C).Then(D);
-
+```
+```
      | -> B -> |
 A -> |         | --> D
      | -> C -> |
@@ -171,10 +168,10 @@ A -> |         | --> D
 
 `D`, here, receives the results of both A and B:
 
-```
-
+```csharp
 A.SkipConnection(B).Then(D);
-
+```
+```
 A -> | -> B -> |
      |---------|--> D
 
@@ -301,7 +298,7 @@ Branches can be build without a start point, then connected later.
 
 In the code below, two static methods generate Pipeline branches that lack start points. These can be fed into an `Then` or `And` call to connect them to a pipeline start point.
 
-```
+```csharp
 /// <summary>
 /// Constructs a pipeline branch that prints how many words are in the string
 /// </summary>
