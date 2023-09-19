@@ -22,7 +22,7 @@ Normally, this may look like:
 static async Task<string> DownloadString(string site)
 {
    using WebClient client = new();
-   return async client.DownloadStringAsync(site).ConfigureAwait(false);
+   return await client.DownloadStringAsync(site).ConfigureAwait(false);
 }
 
 static async Task<string> AskUserForWebsite() => ... // TODO: Prompt the user to provide a website
@@ -172,9 +172,10 @@ A -> |         | --> D
 A.SkipConnection(B).Then(D);
 ```
 ```
-A -> | -> B -> |
-     |---------|--> D
-
+A -> B
+|    |
+|    V
+---> D
 ```
 
 For example
@@ -227,11 +228,10 @@ static Task D(int input1, double input2) => ...
 ...could both be connected and run using:
 
 ```csharp
-// Build the pipeline
-StartPipe<string> start = new(A);
-start.BranchThenJoin(B,C).Then(D);
-
-await Run(start);
+await new StartPipe(A).
+          BranchThenJoin(B,C).
+          Then(D).
+          Run(start);
 ```
 
 Syncronous and asyncronous code can be mixed and matched without change to the pipeline code.
