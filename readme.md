@@ -56,14 +56,13 @@ Fluent Pipelines lets us instead write this instead as
 
 ```csharp
 
-StartPipe<string> start = new(AskUserForWebsite);
-
-start.Then(DownloadString)
-	 .Then(SplitIntoWords)
-	 .Then(CountWords)
-	 .Then(numberOfWords => $"There were {numberOfWords} words")
-	 .Then(Console.WriteLine)
-     .Run();
+AskUserForWebsite.AsPipelineInput()
+                 .Then(DownloadString)
+                 .Then(SplitIntoWords)
+                 .Then(CountWords)
+                 .Then(numberOfWords => $"There were {numberOfWords} words")
+                 .Then(Console.WriteLine)
+                 .Run();
 
 
 static string[] SplitIntoWords(string s) => s.Split(' ');
@@ -77,6 +76,20 @@ In pratice, most uses rely on calls to only a few methods which construct the gr
 In the following example, let `A`,`B`,`C`,`D` be methods, `Func<T,S>` objects, `Func<T,Task<S>>` objects, start points, or the result of a previous call to the extension methods listed below. 
 
 ### Start Points
+
+#### Value
+
+Begin by calling `AsPipelineInput()` from any value to begin a pipeline.
+
+```
+
+"input into the pipeline".AsPipelineInput()
+
+```
+
+This creates a StartPipe automatically (see below) which can be used for other functions such as `Then()`.
+
+#### Function or Value
 
 Begin with a `StartPipe`, which wraps a method or value.
 
@@ -626,11 +639,11 @@ Might be written:
 
 ```csharp
 
-var StepA = new StartPipe(A);
+var stepA = new StartPipe(A);
 
-var BToF = StepA.Then(B).SkipConnection(C).Then(F);
+var bToF = stepA.Then(B).SkipConnection(C).Then(F);
 
-var StepD = StepA.Then(D).Join(BToF).Then(E);
+var stepD = stepA.Then(D).Join(bToF).Then(E);
 
 ```
 

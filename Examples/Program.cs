@@ -1,13 +1,16 @@
-﻿// See https://aka.ms/new-console-template for more information
-using Examples;
+﻿using Examples;
 
 
+Console.WriteLine("Pipeline built from a value\n");
+await BuildPipelineFromAValue.RunPipeline();
+
+
+Console.WriteLine("\nSimple linear\n");
 await SimpleLinear.Numerology();
 
 
 Console.WriteLine("\nSimple Branching\n");
 await SimpleBranching.RunSimpleBranchingPipeline();
-
 
 Console.WriteLine("\nConstruct In Pieces\n");
 await ConstructInPieces.RunPipeline();
