@@ -1,79 +1,94 @@
 ﻿# Fluent Pipelines
 
-Lets you use existing C# code - for virtually anything - in the way you currently use LINQ with little or no adaptation. This is particularly helpful for building heavy or long typesafe data processing pipelines.
+Lets you use virtually any existing C# code in a functional style, the way you currently use LINQ, with little or no adaptation. This is particularly helpful for building memory-heavy or long typesafe data processing pipelines.
 
 Pipelines and sections of pipelines built this way:
-* Are much easier to read and maintain
+* Are easier to read and maintain
 * Are typesafe
 * Are multithreaded and threadsafe
 * Are unit testable
 * Eliminate your need to keep track of `async` code
-* Automatically dipose `IDiposable` objects once they are not required
+* Automatically dispose `IDiposable` objects once they are not required
 * Allow you apply execution settings globally without creating globally available objects
 * Can be defined at multiple levels, in line with 'clean code' principles
+* Can be mixed with normal C# code
+
 
 ## Example
 
-Consider the following code, designed to ask for a webpage, download it, and count the number of words.
+Let's say we have a program that asks for a webpage, downloads it, and counts how many words it contains.
 
-Normally, this may look like:
+As a flow diagram:
 
 ```csharp
-static async Task<string> DownloadString(string site)
-{
-   using WebClient client = new();
-   return await client.DownloadStringAsync(site).ConfigureAwait(false);
-}
+
+await AskUserForWebsite -> |
+                           | await Download -> Dispose Webclient -> SplitIntoWords -> Count -> CreateMessage -> PrintMessage
+Create Web Client       -> | 
+
+
+```
+
+Let's say we had defined two methods as follows:
+
+```csharp
+
+static int CountWords(string content) => content.Split(' ').Length;
+static async Task<string> AskUserForWebsite() => ... // TODO: Prompt the user to provide a website
+
+```
+
+### As Fluent Pipelines
+
+```csharp
+static Task<string> DownloadString(string location, WebClient wc) => wc.DownloadStringAsync();
+
+await new StartPipe(AskUserForWebsite)
+         .SkipConnection(a=> new WebClient())
+         .Then(DownloadString)
+         .Then(CountWords)
+         .Then(wordCount => $"There were {wordCount} words")
+         .Then(Console.WriteLine)
+         .Run();
+```
+
+### As Procedural Code
+Notice the code below is more verbose, less readable, less pipeline-like. One also has to assign variables, dispose the `WebClient` to avoid a memory leak, and use `await` and `ConfigureAwait` to potentially avoid deadlocks:
+
+```csharp
 
 static async Task<string> AskUserForWebsite() => ... // TODO: Prompt the user to provide a website
 
-
-
-async Task CountWordsInSite()
+static async Task CountWordsInSite()
 {
-   string website = await AskUserForWebsite().ConfigureAwait(false);
+   string websiteAddress = await AskUserForWebsite().ConfigureAwait(false);
 
-   string websiteContent = await DownloadString(website).ConfigureAwait(false);
+   string websiteContent;
+   using(WebClient wc = new())
+   {
+        websiteContent = await wc.DownloadString(websiteAddress).ConfigureAwait(false);
+   }
 
-   string[] words = websiteContent.Split(' ');
-
-   int numberOfWords = words.Length;
-
-   string message = $"There were {numberOfWords} words";
-
+   int wordCount = CountWords(websiteContent);
+   string message = $"There were {wordCount} words";
    Console.WriteLine(message);
 }
 
 
 // Call the method
 await CountWordsInSite();
-
 ```
 
-Fluent Pipelines lets us instead write this instead as
-
-```csharp
-
-AskUserForWebsite.AsPipelineInput()
-                 .Then(DownloadString)
-                 .Then(SplitIntoWords)
-                 .Then(CountWords)
-                 .Then(numberOfWords => $"There were {numberOfWords} words")
-                 .Then(Console.WriteLine)
-                 .Run();
-
-
-static string[] SplitIntoWords(string s) => s.Split(' ');
-
-```
 
 ## Primary Operations
 
-In pratice, most uses rely on calls to only a few methods which construct the graph and run it.
+In practice, most uses rely on calls to only a few methods which construct the graph and run it.
 
 In the following example, let `A`,`B`,`C`,`D` be methods, `Func<T,S>` objects, `Func<T,Task<S>>` objects, start points, or the result of a previous call to the extension methods listed below. 
 
 ### Start Points
+
+To begin building a pipelines, start with a `StartPipe`.
 
 #### Value
 
@@ -89,7 +104,7 @@ This creates a StartPipe automatically (see below) which can be used for other f
 
 #### Function or Value
 
-Begin with a `StartPipe`, which wraps a method or value.
+Begin by explicitly creating a new `StartPipe`, which wraps a method or value.
 
 Once the start point exists, we can use the extension methods stated below
 
@@ -163,22 +178,7 @@ A -> |         | --> D
 
 ```
 
-### SkipConnection
-`.SkipConnection()` which performs `Then`, and `Join` to the original input.
-
-`D`, here, receives the results of both A and B:
-
-```csharp
-A.SkipConnection(B).Then(D);
-```
-```
-A -> B
-|    |
-|    V
----> D
-```
-
-For example
+For example, B and C here receive the result of A. D receives the result of B and C together.
 
 ```csharp
 
@@ -187,15 +187,41 @@ static int B(string input) => ...
 static double C(string input) => ...
 static void D(int input1, double input2) => ...
 
-StartPipe<string> start = new(A); // First step will call A()
-
-// Build the pipeline
-start.BranchThenJoin(B,C).Then(D);
-
-
-// Run it
-await start.Run();
+await new StartPipe(A).
+      BranchThenJoin(B,C).
+      Then(D).
+      Run();
 ```
+
+### SkipConnection
+`.SkipConnection()` which performs `Then`, and `Join` to the original input.
+
+`C`, here, receives the results of both A and B:
+
+```csharp
+A.SkipConnection(B).Then(C);
+```
+```
+A -> B
+|    |
+|    V
+|--> C
+```
+
+For example, a pipeline that asks for a person's id, looks them up in the database, and prints their details:
+
+```csharp
+
+static string GetPersonId() => Console.ReadLine();
+static Task<Person> RetrievePerson(int id) => ;// TODO: Some database operation
+static void PrintName(int id, Person person) => Console.WriteLine($"ID {id} Returns {person.Name}.")
+
+await new StartPipe<string>(GetPersonName).
+          SkipConnection(RetrievePerson). 
+          Then(PrintName). 
+          Run();
+```
+
 
 
 ## Async
@@ -338,7 +364,7 @@ All pipeline stages that takes in the same input are run in parallel (via standa
 
 For example, this is OK, because `And` is not used with the Dictionary:
 
-```
+```csharp
 /// <summary>
 /// Calculates word counts in a string
 /// </summary>
@@ -354,7 +380,7 @@ start.Then(GetWordCounts)
 
 The following is NOT OK because Dictionary is used by two branches at the same time but is not threadsafe.
 
-```
+```csharp
 start.Then(GetWordCounts)
      .Then(PrintDictionary)
      .And(PrintDictionaryCount);
@@ -496,9 +522,8 @@ Code is cleanest and most readable when operations are abstracted to occur at th
 
 ```csharp
 
-StartPipe<Animal[]> getAnimals = new(GetAnimals);
-
-getAnimals.Then(PrintBadgerCount)
+var printBadgerCount = new StartPipe<Animal[]>(GetAnimals)
+                          .Then(PrintBadgerCount);
 
 ```
 
@@ -506,13 +531,12 @@ is much more readable than:
 
 ```csharp
 
-StartPipe<Animal[]> getAnimals = new(GetAnimals);
-
-getAnimals.Then(IdentifyHairyAnimals)
-          .BranchThenJoin(IdentifySnouts, IdentifyPaws, IdentifyBlackAndWhite)
-          .Then(LimitToHairyAnimalsWithSnoutsAndFourPawsAndCorrectColour)
-          .Then(a=>a.Count)
-          .Then(PrintBadgerCount);
+var printBadgerCount = new StartPipe<Animal[]>(GetAnimals)
+                          .Then(IdentifyHairyAnimals)
+                          .BranchThenJoin(IdentifySnouts, IdentifyPaws, IdentifyBlackAndWhite)
+                          .Then(LimitToHairyAnimalsWithSnoutsAndFourPawsAndCorrectColour)
+                          .Then(a=>a.Count)
+                          .Then(PrintBadgerCount);
 ```
 
 It's also better designed, because the the first has two high-level operations - a data fetch and user message - while the second contains high level operations and other steps that only form part of the process of finding badgers.
@@ -521,10 +545,9 @@ This becomes clear when want to also count robbins:
 
 ```csharp
 
-StartPipe<Animal[]> getAnimals = new(GetAnimals);
-
-getAnimals.Then(PrintBadgerCount)
-          .And(PrintRobbinCount);
+var printAnimalCounts = new StartPipe<Animal[]>(GetAnimals)
+                           .Then(PrintBadgerCount)
+                           .And(PrintRobbinCount);
 
 ```
 
@@ -537,7 +560,6 @@ Usually, the return types of these methods are very complex due to type safety c
 A result might look something like
 
 ```csharp
-
 static class BadgerIdentifier
 {
 
@@ -566,52 +588,16 @@ static class RobbinIdentifier
    ...
 } 
 
-
 ```
 
 
 We could use these like:
 
 ```csharp
-
-
 StartPipe<Animal[]> getAnimals = new(GetAnimals);
 
 getAnimals.Then(BadgerIdentifier.GetPrintCount())
           .And(RobbinIdentifier.GetPrintCount());
-
-
-```
-
-
-## Some Recipes
-
-
-### A Skipped Connection
-
-
-```
-A --> B-----> C
-|             ↑ 
---------------|
-```
-
-Might be written:
-
-```csharp
-
-var StepA = new StartPipe(A).SkipConnection(B).Then(C);
-
-```
-
-Which is shorthand for
-
-```csharp
-
-var stepA = new StartPipe(A);
-var stepB = StepA.Then(B);
-var pipeline = stepA.Join(stepB).Then(C);
-
 ```
 
 
@@ -638,9 +624,15 @@ Might be written:
 
 var stepA = new StartPipe(A);
 
-var bToF = stepA.Then(B).SkipConnection(C).Then(F);
+var bToF = stepA.
+            Then(B).
+            SkipConnection(C).
+            Then(F);
 
-var stepD = stepA.Then(D).Join(bToF).Then(E);
+var stepD = stepA.
+            Then(D).
+            Join(bToF).
+            Then(E);
 
 ```
 
@@ -653,7 +645,6 @@ Whlie this might seem let fluent than other examples, a pipeline like this is mo
 Best practice would always be to keep these branches apart, as we have done, which means more readable code:
 
 ```csharp
-
 // Open the image
 var imageInput = new StartPipe(OpenImage);
 
@@ -674,11 +665,10 @@ await fullPipeline.Run();
 
 It's cleanest to make separate branches, rather than `And` when using a single object for many tasks. Always make sure the object is threadsafe before doing this!
 
-For example, if we want to create a `WebClient` and our pipeline will download many different items through this, then process each differently:
+For example, if we want to create a `ThreadsafeWebClient` and our pipeline will download many different items through this, then process each differently:
 
 ```csharp
-
-StartPipe<WebClient> getWebClient = new(()=>new WebClient());
+var getWebClient = new StartPipe<ThreadsafeWebClient>(()=>new ThreadsafeWebClient());
 
 getWebClient.Then(GetA).Then(ProcessA).Then(Save);
 getWebClient.Then(GetB).Then(ProcessB).Then(Save);
@@ -692,7 +682,6 @@ await getWebClient.Run();
 Alternatively, you can make methods or properties that return branches, then combine with `And`
 
 ```csharp
-
 [Then type] GetAndProcessA => new AsyncFunc(GetA).Then(ProcessA).Then(Save);
 [Then type] GetAndProcessB => new AsyncFunc(GetB).Then(ProcessB).Then(Save);
 [Then type] GetAndProcessC => new AsyncFunc(GetC).Then(ProcessB).Then(Save);
@@ -704,9 +693,7 @@ Task GetAndProcessAll() => new WebClient().
                            And(GetAndProcessB).
                            And(GetAndProcessC).
                            Run();
-
 ```
-
 ## Disclaimer
 
 This library is built for my professional use with [Musink music software](https://musink.net), medical science, AI, and data science consulting. You're welcome to use, branch and extend it, so long as you stick within the license terms, but I cannot guarantee:
