@@ -698,11 +698,12 @@ Alternatively, you can make methods or properties that return branches, then com
 [Then type] GetAndProcessC => new AsyncFunc(GetC).Then(ProcessB).Then(Save);
 
 
-Task GetAndProcessAll() => new StartPipe(new WebClient).
-                                Then(GetAndProcessA).
-                                And(GetAndProcessB).
-                                And(GetAndProcessC).
-                                Run();
+Task GetAndProcessAll() => new WebClient().
+                           AsPipelineInput().
+                           Then(GetAndProcessA).
+                           And(GetAndProcessB).
+                           And(GetAndProcessC).
+                           Run();
 
 ```
 
