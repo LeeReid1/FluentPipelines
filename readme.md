@@ -679,7 +679,7 @@ It's cleanest to make separate branches, rather than `And` when using a single o
 
 For example, if we want to create a `WebClient` and our pipeline will download many different items through this, then process each differently:
 
-```
+```csharp
 
 StartPipe<WebClient> getWebClient = new(()=>new WebClient());
 
@@ -694,7 +694,7 @@ await getWebClient.Run();
 
 Alternatively, you can make methods or properties that return branches, then combine with `And`
 
-```
+```csharp
 
 [Then type] GetAndProcessA => new AsyncFunc(GetA).Then(ProcessA).Then(Save);
 [Then type] GetAndProcessB => new AsyncFunc(GetB).Then(ProcessB).Then(Save);
