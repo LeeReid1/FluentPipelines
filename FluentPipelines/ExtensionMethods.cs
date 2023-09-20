@@ -217,6 +217,17 @@ public static class ExtensionMethods
    /// Connects the result of a Join call to the next node
    /// </summary>
    /// <remarks>Wraps methods that do not take in a disposable tuple but take in the correct arguments individually</remarks>
+   public static ThenResult<DisposableTuple<TVal1, TVal2>, Pipeline_FullySealed> Then<TVal1, TVal2>(this IAsPipeline<Pipeline_LeftSealed<DisposableTuple<TVal1, TVal2>>> source,
+                                                                                                    Func<TVal1, TVal2, Task> next,
+                                                                                                    string? name = null)
+   {
+      return Then(source, new AsyncAction<DisposableTuple<TVal1, TVal2>>(tup => next(tup.Val1, tup.Val2), name));
+   }
+   
+   /// <summary>
+   /// Connects the result of a Join call to the next node
+   /// </summary>
+   /// <remarks>Wraps methods that do not take in a disposable tuple but take in the correct arguments individually</remarks>
    public static ThenResult<DisposableTuple<TVal1, TVal2>, Pipeline_LeftSealed<TOut>> Then<TVal1, TVal2, TOut>(this IAsPipeline<Pipeline_LeftSealed<DisposableTuple<TVal1, TVal2>>> source,
                                                                                Func<TVal1, TVal2, TOut> next,
                                                                                string? name = null)
@@ -225,6 +236,17 @@ public static class ExtensionMethods
    }
 
 
+   /// <summary>
+   /// Connects the result of a Join call to the next node
+   /// </summary>
+   /// <remarks>Wraps methods that do not take in a disposable tuple but take in the correct arguments individually</remarks>
+   public static ThenResult<DisposableTuple<TVal1, TVal2, TVal3>, Pipeline_FullySealed> Then<TVal1, TVal2, TVal3>(this IAsPipeline<Pipeline_LeftSealed<DisposableTuple<TVal1, TVal2, TVal3>>> source,
+                                                                               Func<TVal1, TVal2, TVal3, Task> next,
+                                                                               string? name = null)
+   {
+      return Then(source, new AsyncAction<DisposableTuple<TVal1, TVal2, TVal3>>(tup => next(tup.Val1, tup.Val2, tup.Val3), name));
+   }
+   
    /// <summary>
    /// Connects the result of a Join call to the next node
    /// </summary>
